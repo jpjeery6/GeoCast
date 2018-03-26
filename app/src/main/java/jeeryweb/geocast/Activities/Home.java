@@ -137,7 +137,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             public void onClick(View v) {
                 //TODO something when floating action menu first item clicked
                 //send in built message directly
-                msg = "Please help me";
+                msg = "Please help me please";
 
                 //do this on a new thread
                 new Thread(new Runnable() {
