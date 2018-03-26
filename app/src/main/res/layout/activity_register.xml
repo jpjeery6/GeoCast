@@ -1,85 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:fitsSystemWindows="true">
-
-    <LinearLayout
-        android:orientation="vertical"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activities.Register"
+    android:layout_marginBottom="5dp"
+    android:orientation="vertical"
+    android:id="@+id/main">
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="56dp"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp">
-
-        <ImageView android:src="@drawable/projectloc"
-            android:layout_width="wrap_content"
-            android:layout_height="72dp"
-            android:layout_marginBottom="24dp"
-            android:layout_gravity="center_horizontal" />
-
-        <!-- Name Label -->
-        <android.support.design.widget.TextInputLayout
+        android:layout_height="250dp">
+        <RelativeLayout
+            android:background="@drawable/side_nav_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:theme="@style/AppTheme">
-            <EditText android:id="@+id/activity_register_username"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPersonName"
-                android:hint="Name" />
-        </android.support.design.widget.TextInputLayout>
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:layout_marginTop="45dp"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/activity_register_pp_imageView"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@drawable/ic_user"
+                />
+            <ImageButton
+                android:layout_marginTop="52dp"
+                android:layout_height="35dp"
+                android:layout_width="35dp"
+                android:src="@drawable/ic_clear_black"
+                android:id="@+id/activity_register_ppselectImage"
+                android:layout_alignRight="@+id/activity_register_pp_imageView"
+                />
+        </RelativeLayout>
 
-        <!-- Password Label -->
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:theme="@style/AppTheme">
-            <EditText android:id="@+id/activity_register_password1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:hint="Password"/>
-        </android.support.design.widget.TextInputLayout>
 
-        <!-- Password Re-enter Label -->
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:theme="@style/AppTheme">
-            <EditText android:id="@+id/activity_register_password2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:hint="Re-enter Password"/>
-        </android.support.design.widget.TextInputLayout>
+    </RelativeLayout>
 
-        <!-- Signup Button -->
-        <android.support.v7.widget.AppCompatButton
-            android:id="@+id/activity_register_regButton"
+    <ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:fitsSystemWindows="true">
+
+
+        <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"
-            android:padding="12dp"
-            android:text="Create Account"/>
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:background="#FFFF"
+            android:paddingRight="30dp"
+            android:paddingLeft="30dp"
+            android:paddingTop="10dp">
 
-        <TextView android:id="@+id/activity_register_linklogin"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:text="Already a member? Login"
-            android:gravity="center"
-            android:textColor="@android:color/holo_blue_dark"
-            android:textSize="12dip"/>
 
-    </LinearLayout>
-</ScrollView>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+
+                <EditText
+                    android:id="@+id/activity_register_user"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Name"
+                    android:inputType="textEmailAddress" />
+            </android.support.design.widget.TextInputLayout>
+
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+                <EditText android:id="@+id/activity_register_pass1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:hint="Password"/>
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+                <EditText android:id="@+id/activity_register_pass2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:hint="Re-enter Password"/>
+            </android.support.design.widget.TextInputLayout>
+
+            <!-- Signup Button -->
+
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+                <EditText
+                    android:id="@+id/activity_register_bioage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="Your Age"
+                    android:inputType="number"/>
+            </android.support.design.widget.TextInputLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gender:"
+                    android:gravity="center"
+
+                    android:textSize="22dip"/>
+                <RadioGroup
+                    android:id="@+id/activity_register_biogender"
+                    android:layout_width="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content" >
+
+                    <RadioButton
+                        android:id="@+id/radioMale"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Male"
+                        android:checked="true" />
+
+                    <RadioButton
+                        android:id="@+id/radioFemale"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Female" />
+
+                </RadioGroup>
+
+            </LinearLayout>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+                <EditText android:id="@+id/activity_register_biooccupation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:hint="Your occupation" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+                <EditText android:id="@+id/activity_register_phonenumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:hint="Phone number(optional)" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:theme="@style/AppTheme">
+                <TextView android:id="@+id/activity_register_ieminumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="" />
+            </android.support.design.widget.TextInputLayout>
+
+            <Button
+                android:id="@+id/activity_register_regbtn"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="22dp"
+                android:background="#0069c0"
+                android:text="Create Account"
+                android:textAllCaps="false"
+                android:textColor="#fff"
+                android:textSize="18sp" />
+            <TextView
+                android:id="@+id/activity_register_link_login"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:paddingTop="3dp"
+                android:layout_marginBottom="5dp"
+                android:textSize="12dip"
+                android:text="Already have an acoount ? Log in?" />
+        </LinearLayout>
+    </ScrollView>
+
+
+
+</LinearLayout>

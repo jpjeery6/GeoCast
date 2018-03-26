@@ -1,20 +1,16 @@
 package jeeryweb.geocast.Activities;
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
+
 import android.util.Log;
-import android.view.MotionEvent;
+
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -29,16 +25,12 @@ import android.content.Context;
 import android.location.Location;
 import android.os.Handler;
 
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.clans.fab.FloatingActionMenu;
-import com.github.clans.fab.FloatingActionButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -144,6 +136,27 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             public void onClick(View v) {
                 //TODO something when floating action menu first item clicked
                 //send in built message directly
+                msg = "Please help me";
+
+                //do this on a new thread
+                new Thread(new Runnable() {
+                    public void run() {                                                 //THREAD 4.............
+                        // a potentially  time consuming task
+                        if (locationObj != null) {
+                            network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj",null,null,null,null);
+                            result = network.DoWork();
+                            if (result != null) {
+                                Log.e(TAG, "send message main thread" + result);
+                                //pass this result to UI thread by writing a message to the UI's handler
+                                Message m = Message.obtain();
+                                Bundle bundle = new Bundle();
+                                bundle.putString("result", result);
+                                m.setData(bundle);
+                                handler.sendMessage(m);
+                            }
+                        }
+                    }
+                }).start();
                 sendMessageFab.close(true);
 
             }
@@ -154,6 +167,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 MessageInputDialog messageInputDialog = new MessageInputDialog();
                 messageInputDialog.passFloatMenu(sendMessageFab);
                 messageInputDialog.show(getFragmentManager(), "customMsg");
+
             }
         });
         sendMessageFab.setClosedOnTouchOutside(true);
@@ -206,7 +220,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 new Thread(new Runnable() {
                     public void run() {                                                 //THREAD 1.................
                         // a potentially  time consuming task
-                        network = new Network(updateFcm, username, password, "dummy", "00.00", "00.00", fcmToken);
+                        network = new Network(updateFcm, username, password, "dummy", "00.00", "00.00", fcmToken,null,null,null,null);
                         result = network.DoWork();
                         if (result != null) {
                             Log.e(TAG, " Fcm " + result);
@@ -274,7 +288,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                         new Thread(new Runnable() {
                             public void run() {                                                     //THREAD 2............
                                 // a potentially  time consuming task
-                                network = new Network(updateLoc, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "kjdfjk");
+                                network = new Network(updateLoc, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "kjdfjk",null,null,null,null);
                                 result = network.DoWork();
                                 if (result != null) {
                                     Log.e(TAG, "toast main thread" + result);
@@ -483,9 +497,85 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.home_action_logout) {
+            //logout...................................................................................................
+            Log.e("nav_logout= ","true");
+            AlertDialog.Builder builder;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                builder = new AlertDialog.Builder(con, android.R.style.Theme_Material_Dialog_Alert);
+            } else {
+                builder = new AlertDialog.Builder(con);
+            }
+            builder.setTitle("Log out")
+                    .setMessage("Are you sure you want to log out? This will delete all your messages from the device")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // continue with delete
+                            sharedPrefHandler.logoutUser(con);
+                            fileHelper =new FileHelper();
+                            fileHelper.deleteFile(con);
+
+                            //set loggedIn bit in database to Zero
+                            //do this on a new thread
+                            new Thread(new Runnable() {
+                                public void run() {                                                     //THREAD 3............
+                                    // a potentially  time consuming task
+                                    network = new Network(lgot, username, password, "dummy", "00.00","00.00", "dummy",null,null,null,null);
+                                    result = network.DoWork();
+                                    if (result != null) {
+                                        Log.e(TAG, "toast main thread" + result);
+                                    }
+                                }
+                            }).start();
+                            Toast.makeText(con, "Logged out Successfully", Toast.LENGTH_LONG).show();
+
+                            // After logout redirect user to going Activity
+                            Intent i = new Intent(con, Login.class);
+                            con.startActivity(i);
+                            finish();
+
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // do nothing
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            //logout done
+
             return true;
         }
+        else if(id == R.id.home_action_downloadchat)
+        {
+            //download messages ........................................................................................
+            fileHelper = new FileHelper();
+            if (fileHelper.emptyFile(con)) {
+                new Thread(new Runnable() {
+                    public void run() {                                                     //THREAD 3............
+                        // a potentially  time consuming task
+                        network = new Network(pullMsg, username, password, "dummy", "00.00", "00.00", "dummy", null,null,null,null);
+                        result = network.DoWork();
+                        if (result != null) {
+                            Log.e(TAG, "toast main thread=" + result);
+                            //write the results in the file
+                            //.................
+                            fileHelper.writeFile(con, result);
+
+                        }
+
+                    }
+                }).start();
+                Toast.makeText(con, "All Messages downloaded", Toast.LENGTH_SHORT).show();
+            }
+            else
+                Toast.makeText(con, "You already have messages", Toast.LENGTH_SHORT).show();
+        }
+        else if (id == R.id.home_action_settings) {
+            return true;
+        }
+
 
         return super.onOptionsItemSelected(item);
     }
