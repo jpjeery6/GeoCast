@@ -1,0 +1,73 @@
+{
+  "project_info": {
+    "project_number": "759152726076",
+    "firebase_url": "https://peak-dominion-183815.firebaseio.com",
+    "project_id": "peak-dominion-183815",
+    "storage_bucket": "peak-dominion-183815.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:759152726076:android:83a794c207400326",
+        "android_client_info": {
+          "package_name": "jeeryweb.locationtest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "759152726076-rnds93mpuh5aiupmtbv9rrgd9emkeml3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgDRgcZ6WpfTTATG6Ow1sluTD1csPTQdQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:759152726076:android:9ec16dcd2f72c0d5",
+        "android_client_info": {
+          "package_name": "jeeryweb.geocast"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "759152726076-rnds93mpuh5aiupmtbv9rrgd9emkeml3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgDRgcZ6WpfTTATG6Ow1sluTD1csPTQdQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
