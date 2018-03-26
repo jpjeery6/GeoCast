@@ -147,7 +147,6 @@ public class Login extends AppCompatActivity {
                 if (progressDialog != null)
                     progressDialog.dismiss();
 
-                //login.setEnabled(false);
                 // Starting nextActivity
                 if (result.contains("migrate")) {
                     Toast.makeText(Login.this, "Please Migrate account", Toast.LENGTH_SHORT).show();
