@@ -34,6 +34,8 @@ public class SharedPrefHandler {
     //Fcm token
     public static final String FCM_TOKEN = "FCMToken";
 
+    public static final String IMEI = "IMEI";
+
 
 //Methods
     // Constructor
@@ -94,4 +96,14 @@ public class SharedPrefHandler {
         editor.commit();
 
     }
+
+    public void saveIMEI(String imei){
+        editor.putString(IMEI ,imei);
+        editor.commit();
+    }
+    public String getIMEI()
+    {
+        return pref.getString(IMEI, null);
+    }
+
 }

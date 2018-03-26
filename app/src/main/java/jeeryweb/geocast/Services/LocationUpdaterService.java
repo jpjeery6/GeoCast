@@ -58,7 +58,7 @@ public class LocationUpdaterService extends Service {
             new Thread(new Runnable() {
                 public void run() {
                     // a potentially  time consuming task
-                    network =new Network(updateLoc,user,pass,msg,latt,longi,"jdnksj");
+                    network =new Network(updateLoc,user,pass,msg,latt,longi,"jdnksj",null,null,null,null);
                     result=network.DoWork();
                     if(result!=null)
                     {

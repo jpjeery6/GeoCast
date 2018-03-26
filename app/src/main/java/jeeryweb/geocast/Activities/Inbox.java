@@ -37,7 +37,7 @@ import jeeryweb.geocast.databinding.ActivityInboxBinding;
 public class Inbox extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    String filename = "projectLocChat";
+    String filename = "GeoCastInbox";
     public boolean isInFront;
     Context con;
     ActivityInboxBinding activityInboxBinding;

@@ -41,6 +41,7 @@ public class MessageInputDialog extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         // get the message and send to server
+
                         floatingActionMenu.close(true);
                     }
                 })
