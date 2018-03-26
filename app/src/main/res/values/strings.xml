@@ -9,7 +9,7 @@
     <string name="title_activity_inbox">Inbox</string>
     <string name="title_activity_sent">Sent</string>
 
-
+    <string name="debojyoti">Debojyoti Paul</string>
     <string name="network_login">https://jeeryweb.000webhostapp.com/ProjectLoc/login.php</string>
     <string name="network_register">https://jeeryweb.000webhostapp.com/ProjectLoc/register.php</string>
     <string name="network_update_location">https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php</string>
