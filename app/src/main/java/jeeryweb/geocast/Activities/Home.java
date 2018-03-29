@@ -1,14 +1,27 @@
 package jeeryweb.geocast.Activities;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
 import android.content.Intent;
 
+import android.content.IntentFilter;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Message;
 
+import android.provider.*;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import android.view.View;
@@ -33,8 +46,23 @@ import android.widget.Toast;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -43,7 +71,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -80,23 +111,53 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
     private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
     private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
+    public static boolean locChanged=false;
 
-    //debojyopti11 forked
+
+    private BroadcastReceiver receiver;
+
+
+
     //objects
     SharedPrefHandler sharedPrefHandler;
     Handler handler;
     NavigationView navigationView;
     Context con;
+    Activity activity;
+
+
+
     //globally required for location purpose
+    private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
     static Location locationObj;
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
+    /**
+     * Provides access to the Location Settings API.
+     */
+    private SettingsClient mSettingsClient;
+    /**
+     * Stores the types of location services the client is interested in using. Used for checking
+     * settings to determine if the device has optimal location settings.
+     */
+    private LocationSettingsRequest mLocationSettingsRequest;
 
+    /**
+     * Constant used in the location settings dialog.
+     */
+    private static final int REQUEST_CHECK_SETTINGS = 0x1;
     private FusedLocationProviderClient mFusedLocationClient;
     LocationUpdaterService locationUpdaterService;
+
+
+
+
     Network network;
     FileHelper fileHelper;
-    FloatingActionMenu sendMessageFab;
+
+
 
     //Variables
     private final String TAG = getClass().getSimpleName();
@@ -108,9 +169,15 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     String fcmToken;
     String msg, result;
 
+
+
+
     View mapView;
+    FloatingActionMenu sendMessageFab;
 
 
+
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,19 +185,39 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        con = this;
+        activity= this;
 
 
-        /*
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-        */
+        receiver = new BroadcastReceiver() {
+            final Snackbar snackbar=Snackbar.make(findViewById(R.id.home_content_parent), "No Internet Connection", Snackbar.LENGTH_INDEFINITE);
+            @Override
+            public void onReceive(Context context, Intent arg1) {
+                //do something based on the intent's action
+                boolean isConnected = arg1.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
+                if(isConnected){
+                    Log.e("broadcast reciever","no network");
+                    snackbar.show();
+                }
+                else{
+                    Log.e("broadcast reciever","network aagaya");
+                    if(snackbar!=null) {
+                        snackbar.dismiss();
+                        Log.e("broadcast reciever","snackbar  mila");
+                    }
+                }
+            }
+        };
+        registerReceiver(receiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+
+
+
 
         com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
 
         sendMessageFab = (FloatingActionMenu) findViewById(R.id.sendmsg_floating_menu);
         emergencyMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.emergencymsgfab);
         customMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.custommsgfab);
-
 
 
         emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
@@ -144,7 +231,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     public void run() {                                                 //THREAD 4.............
                         // a potentially  time consuming task
                         if (locationObj != null) {
-                            network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj",null,null,null,null);
+                            network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
                             result = network.DoWork();
                             if (result != null) {
                                 Log.e(TAG, "send message main thread" + result);
@@ -174,6 +261,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         sendMessageFab.setClosedOnTouchOutside(true);
 
 
+
+
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -190,7 +280,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //setting up objects ................................................................................
         sharedPrefHandler = new SharedPrefHandler(this);
-        con = this;
+
 
         //logged in first time or not --required for fcm token sending........................................
         Bundle bundle = getIntent().getExtras();
@@ -221,7 +311,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 new Thread(new Runnable() {
                     public void run() {                                                 //THREAD 1.................
                         // a potentially  time consuming task
-                        network = new Network(updateFcm, username, password, "dummy", "00.00", "00.00", fcmToken,null,null,null,null);
+                        network = new Network(updateFcm, username, password, "dummy", "00.00", "00.00", fcmToken, null, null, null, null);
                         result = network.DoWork();
                         if (result != null) {
                             Log.e(TAG, " Fcm " + result);
@@ -240,7 +330,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
         //set username in navigation drawer
-        TextView navUsername = (TextView)homeNavHeader.findViewById(R.id.home_nav_username);
+        TextView navUsername = (TextView) homeNavHeader.findViewById(R.id.home_nav_username);
         navUsername.setText(username.toUpperCase());
 
 
@@ -252,78 +342,57 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         mapFragment.getMapAsync(this);
 
 
-        //getting the last known location.............................................................................
-        //might fail if no last known location available
-        if (username != null) {
+
+        //try to get current location
+        //check settings first
+        try {
+            mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), android.provider.Settings.Secure.LOCATION_MODE);
+            Log.e("settings mode::::=",String.valueOf(mode));
+        } catch (Exception e) {
+            Log.e("settings mode=","exception setting not found");
+            e.printStackTrace();
+        }
+        if(mode==0)
+            showSettingsAlert(0); //ask to enable gps
+        if(mode!=0 && mode!=3)
+            showSettingsAlert(1); //ask to set to high accuracy mode
+        if(mode==3)
+        {
+            //all ok try to get location
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-            mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    // Got last known location. In some rare situations this can be null.
-                    if (location != null) {
-                        locationObj = location;
-                        //set the marker in the map only if the map is already ready
-                        if (mMap != null) {
-                            LatLng myloc = new LatLng(location.getLatitude(), location.getLongitude());
-                            mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
 
-                            LatLng coordinate = new LatLng(location.getLatitude(), location.getLongitude()); //Store these lat lng values somewhere. These should be constant.
-                            CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(
-                                    coordinate, 13);
-                            mMap.animateCamera(cam);
-                            mMap.setMyLocationEnabled(true);
-                            Log.e("maps", "onMapReady Callback my location enabled");
-                        }
+            //mFusedLocationClient=== OPtion 1:: get last known location
+            tryToGetLastLocation();
+            //mFusedLocationClient=== OPtion 2:: request location ourself
+            if(locationObj==null)
+                tryToRequestLocationOurself();
 
-                        // Logic to handle location object
-                        Log.e(TAG + " lattitude", Double.toString(location.getLatitude()));
-                        Log.e(TAG + " longitude", Double.toString(location.getLongitude()));
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
-                        String format = simpleDateFormat.format(new Date());
-                        Log.v(TAG + "timestamp", format);
-
-
-                        msg = "dummy";
-                        //update database with this location
-                        //do this on a new thread
-                        new Thread(new Runnable() {
-                            public void run() {                                                     //THREAD 2............
-                                // a potentially  time consuming task
-                                network = new Network(updateLoc, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "kjdfjk",null,null,null,null);
-                                result = network.DoWork();
-                                if (result != null) {
-                                    Log.e(TAG, "toast main thread" + result);
-                                    if (result.contains("some keyword")) { //we are not sending this thats why some keyword
-                                        //pass this result to UI thread by writing a message to the UI's handler
-                                        Message m = Message.obtain();
-                                        Bundle bundle = new Bundle();
-                                        bundle.putString("result", result);
-                                        m.setData(bundle);
-                                        handler.sendMessage(m);
-                                    }
-                                }
-                            }
-                        }).start();
-
-                        //start the services------------only if location is known
-                        //location updater service
-                        if (!isMyServiceRunning(LocationUpdaterService.class)) {
-                            locationUpdaterService = new LocationUpdaterService();
-                            Intent intent1 = new Intent(con, LocationUpdaterService.class);
-                            intent1.putExtra("usern", username);
-                            intent1.putExtra("passw", password);
-                            intent1.putExtra("mssg", msg);
-                            intent1.putExtra("locoLat", Double.toString(locationObj.getLatitude()));
-                            intent1.putExtra("locoLon", Double.toString(locationObj.getLongitude()));
-                            startService(intent1);
-                        }
-
-
-                    }
-                }
-            });
+            //lets assume we successfully got the location
+            if(locationObj!=null) {
+                homeLocationSuccessDoWork();
+                tryToRequestLocationOurself(); //to get periodic update on location change
+            }
 
         }
+
+
+        mapView.post(new Runnable() {
+            @Override
+            public void run() {
+
+                if (mMap != null && locationObj!=null && locChanged ==true) {
+                    LatLng myloc = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
+                    mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
+                    LatLng coordinate = new LatLng(locationObj.getLatitude(), locationObj.getLongitude()); //Store these lat lng values somewhere. These should be constant.
+                    CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(coordinate, 13);
+                    mMap.animateCamera(cam);
+                    mMap.setMyLocationEnabled(true);
+                    Log.e("maps", "ui thread update");
+                    locChanged = false;
+                }
+                mapView.postDelayed(this,10000);
+            }
+        });
 
 
         //setting listeners on buttons.............................................................................
@@ -338,36 +407,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         });
 
-        //message send button
-        /*
-        send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                msg = message.getText().toString();
-
-                //do this on a new thread
-                new Thread(new Runnable() {
-                    public void run() {                                                 //THREAD 4.............
-                        // a potentially  time consuming task
-                        if (locationObj != null) {
-                            network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj");
-                            result = network.DoWork();
-                            if (result != null) {
-                                Log.e(TAG, "send message main thread" + result);
-                                //pass this result to UI thread by writing a message to the UI's handler
-                                Message m = Message.obtain();
-                                Bundle bundle = new Bundle();
-                                bundle.putString("result", result);
-                                m.setData(bundle);
-                                handler.sendMessage(m);
-                            }
-                        }
-                    }
-                }).start();
-
-            }
-        });
-        */
         //done-------------------------------------------------------------------------------------
 
         Log.e("Main2Activity Threads=", " " + Thread.activeCount());
@@ -381,6 +420,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         };
     }
 
+
     //when this activity restarts or resumes check if the location service is running or not
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -393,6 +433,173 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
+    void homeLocationSuccessDoWork() {
+
+        //Got Location
+        Log.e("mFusedLocationClient", "getLastLocationSuccess");
+        Log.e("mFusedLocationClient", "getLastLocationObjnotnull");
+        //set the marker in the map only if the map is already ready
+        if (mMap != null && locationObj !=null) {
+            LatLng myloc = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
+            LatLng coordinate = new LatLng(locationObj.getLatitude(), locationObj.getLongitude()); //Store these lat lng values somewhere. These should be constant.
+            CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(coordinate, 13);
+            mMap.animateCamera(cam);
+            mMap.setMyLocationEnabled(true);
+            Log.e("maps", "home location success do work");
+        }
+        // Logic to handle location object
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+        String format = simpleDateFormat.format(new Date());
+        //Log.v(TAG + "timestamp", format);Log.e(TAG + " lattitude", Double.toString(location.getLatitude()));Log.e(TAG + " longitude", Double.toString(location.getLongitude()));
+        msg = "dummy";
+        //update database with this location
+        //do this on a new thread
+        new Thread(new Runnable() {
+            public void run() {                                                     //THREAD 2............
+                // a potentially  time consuming task
+                network = new Network(updateLoc, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "kjdfjk", null, null, null, null);
+                result = network.DoWork();
+                if (result != null) {
+                    Log.e(TAG, "toast main thread" + result);
+                    if (result.contains("some keyword")) { //we are not sending this thats why some keyword
+                        //pass this result to UI thread by writing a message to the UI's handler
+                        Message m = Message.obtain();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("result", result);
+                        m.setData(bundle);
+                        handler.sendMessage(m);
+                    }
+                }
+            }
+        }).start();
+
+        //start the services------------only if location is known
+        //location updater service
+        if (!isMyServiceRunning(LocationUpdaterService.class)) {
+            Intent intent1 = new Intent(con, LocationUpdaterService.class);
+            startService(intent1);
+        }
+    }
+
+    private void tryToGetLastLocation()
+    {
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(activity, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                locationObj=location;
+
+            }
+        });
+    }
+
+    private void tryToRequestLocationOurself()
+    {
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        //create locationCallback
+        locationCallback = new LocationCallback() {
+            public void OnLocationResult(LocationResult locationResult) {
+
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    Log.e("on location change"," main ui thread location change callback");
+                    // Update UI with location data
+                    locationObj = location;
+                    locChanged= true;
+                }
+
+            }
+        };
+
+        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+
+    }
+
+
+
+
+    /**
+     * Function to show settings alert dialog
+     * On pressing Settings button will lauch Settings Options
+     * */
+
+    public void showSettingsAlert(int mode){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(con);
+
+        // Setting Dialog Title
+        alertDialog.setTitle("GPS settings");
+
+        // Setting Dialog Message
+        if(mode == 0)
+            alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+        else if(mode ==1)
+            alertDialog.setMessage("GPS is not set to High Accuracy Mode. Do you want to go to settings menu?");
+
+        // On pressing Settings button
+        alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(intent,103);
+            }
+        });
+
+        // on pressing cancel button
+        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        // Showing Alert Message
+        alertDialog.show();
+    }
+
+    private  void updateLocationInUI()
+    {
+        //mFusedLocationClient=== OPtion 1:: get last known location
+        tryToGetLastLocation();
+        //mFusedLocationClient=== OPtion 2:: request location ourself
+        if(locationObj==null)
+            tryToRequestLocationOurself();
+
+        //lets assume we successfully got the location
+        if(locationObj!=null){
+            homeLocationSuccessDoWork();
+            tryToRequestLocationOurself(); //to get periodic update on location change
+        }
+    }
+
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check for the integer request code originally supplied to startResolutionForResult().
+        try {
+            int mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            Log.e("settings mode now:::=",String.valueOf(mode));
+            if(mode!=3)
+                finish();
+            else
+                {
+                    Log.e("okokok","everything ok");
+                    updateLocationInUI();
+                }
+
+        } catch (Exception e) {
+            Log.e("settings mode=","exception setting not found");
+            e.printStackTrace();
+        }
+        Log.e("on activity result rec=", String.valueOf(requestCode));
+
+    }
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -402,14 +609,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
-    @Override
+    @SuppressLint("MissingPermission")
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        //mMap.setMinZoomPreference(10.0f);
-        //mMap.setMaxZoomPreference(20.0f);
-
-
         //changing the position of my location button
         View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
         RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
@@ -426,9 +628,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         mUiSettings.setAllGesturesEnabled(true);
         Log.e("maps", "onMapReady Callback");
 
-
     }
-
 
 
 
@@ -454,6 +654,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
+
+//States of a actvity and menu and navigation item selected methods*********************************
     @Override
     public void onResume() {
         super.onResume();
