@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.LocationListener;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -69,7 +70,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -133,7 +136,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private GoogleMap mMap;
     static Location locationObj;
     private LocationRequest locationRequest;
-    private LocationCallback locationCallback;
+    Marker mCurrLocationMarker;
     /**
      * Provides access to the Location Settings API.
      */
@@ -339,60 +342,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapView = mapFragment.getView();
-        mapFragment.getMapAsync(this);
-
-
-
-        //try to get current location
-        //check settings first
-        try {
-            mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), android.provider.Settings.Secure.LOCATION_MODE);
-            Log.e("settings mode::::=",String.valueOf(mode));
-        } catch (Exception e) {
-            Log.e("settings mode=","exception setting not found");
-            e.printStackTrace();
-        }
-        if(mode==0)
-            showSettingsAlert(0); //ask to enable gps
-        if(mode!=0 && mode!=3)
-            showSettingsAlert(1); //ask to set to high accuracy mode
-        if(mode==3)
-        {
-            //all ok try to get location
-            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-            //mFusedLocationClient=== OPtion 1:: get last known location
-            tryToGetLastLocation();
-            //mFusedLocationClient=== OPtion 2:: request location ourself
-            if(locationObj==null)
-                tryToRequestLocationOurself();
-
-            //lets assume we successfully got the location
-            if(locationObj!=null) {
-                homeLocationSuccessDoWork();
-                tryToRequestLocationOurself(); //to get periodic update on location change
-            }
-
-        }
-
-
-        mapView.post(new Runnable() {
-            @Override
-            public void run() {
-
-                if (mMap != null && locationObj!=null && locChanged ==true) {
-                    LatLng myloc = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
-                    LatLng coordinate = new LatLng(locationObj.getLatitude(), locationObj.getLongitude()); //Store these lat lng values somewhere. These should be constant.
-                    CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(coordinate, 13);
-                    mMap.animateCamera(cam);
-                    mMap.setMyLocationEnabled(true);
-                    Log.e("maps", "ui thread update");
-                    locChanged = false;
-                }
-                mapView.postDelayed(this,10000);
-            }
-        });
 
 
         //setting listeners on buttons.............................................................................
@@ -407,9 +356,32 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         });
 
-        //done-------------------------------------------------------------------------------------
-
         Log.e("Main2Activity Threads=", " " + Thread.activeCount());
+
+        //execution going to the callback
+        mapFragment.getMapAsync(this);
+
+        /*
+        mapView.post(new Runnable() {
+            @Override
+            public void run() {
+
+                if (mMap != null && locationObj!=null && locChanged ==true) {
+                    LatLng myloc = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
+                    mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
+                    LatLng coordinate = new LatLng(locationObj.getLatitude(), locationObj.getLongitude()); //Store these lat lng values somewhere. These should be constant.
+                    CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(coordinate, 13);
+                    mMap.animateCamera(cam);
+                    mMap.setMyLocationEnabled(true);
+                    Log.e("post on create", "ui thread update");
+                    locChanged = false;
+                }
+                mapView.postDelayed(this,10000);
+            }
+        });
+        */
+
+        //done-------------------------------------------------------------------------------------
 
         handler = new Handler() {
             @Override
@@ -419,35 +391,141 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         };
     }
+    //on create ends here***************************************************************************
 
 
-    //when this activity restarts or resumes check if the location service is running or not
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
+
+
+    /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera. In this case,
+     * we just add a marker near Sydney, Australia.
+     * If Google Play services is not installed on the device, the user will be prompted to install
+     * it inside the SupportMapFragment. This method will only be triggered once the user has
+     * installed Google Play services and returned to the app.
+     */
+    @SuppressLint("MissingPermission")
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        Log.e("maps", "onMapReady async callback");
+
+        //my location button---------
+        //changing the position of my location button
+        View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+        // position on right top
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+        rlp.setMargins(16, 200, 16, 16);
+
+
+        //enable my location function
+        mMap.setMyLocationEnabled(true);
+
+        mUiSettings = mMap.getUiSettings();
+        mUiSettings.setCompassEnabled(true);
+        //mUiSettings.setZoomControlsEnabled(true);
+        mUiSettings.setAllGesturesEnabled(true);
+        Log.e("maps", "map is ready with my location button and everything, get location now");
+
+        getLoc();
+
+    }
+
+
+
+
+
+    private void getLoc()
+    {
+        //try to get current location
+        //check settings first
+        try {
+            mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), android.provider.Settings.Secure.LOCATION_MODE);
+            Log.e("settings mode::::=",String.valueOf(mode));
+        } catch (Exception e) {
+            Log.e("settings mode=","exception setting not found");
+            e.printStackTrace();
+        }
+        if(mode==0)
+            showSettingsAlert(0); //ask to enable gps
+        else if(mode!=0 && mode!=3)
+            showSettingsAlert(1); //ask to set to high accuracy mode
+        else if(mode==3)
+        {
+            Log.e("get Loc","mode is 3 settings ok get loc now");
+            //all settings ok try to get location
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            tryToRequestLocationOurself();
+
+        }
+    }
+
+
+
+    //it is an attribute
+    LocationCallback locationCallback = new LocationCallback(){
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null)
+                getLoc();
+            else {
+                //Log.e("location callback", "on result func called ");
+                for (Location location : locationResult.getLocations()) {
+                    Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
+                    locationObj = location;
+                    homeLocationSuccessDoWork();
+                }
             }
         }
-        return false;
+
+    };
+
+    private void tryToRequestLocationOurself()
+    {
+        Log.e("tryToReqOurself","entered func");
+        locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        if (!isMyServiceRunning(LocationUpdaterService.class)) {
+            Intent intent1 = new Intent(con, LocationUpdaterService.class);
+            startService(intent1);
+        }
+
+        Log.e("tryToReqOurself","requesting loca updtaes");
+        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback,Looper.myLooper());
+
     }
+
 
 
     void homeLocationSuccessDoWork() {
 
         //Got Location
-        Log.e("mFusedLocationClient", "getLastLocationSuccess");
-        Log.e("mFusedLocationClient", "getLastLocationObjnotnull");
+        //Log.e("homeLocationSuccess", "lets set the marker and update location to the server");
         //set the marker in the map only if the map is already ready
         if (mMap != null && locationObj !=null) {
-            LatLng myloc = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
-            mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
-            LatLng coordinate = new LatLng(locationObj.getLatitude(), locationObj.getLongitude()); //Store these lat lng values somewhere. These should be constant.
-            CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(coordinate, 13);
-            mMap.animateCamera(cam);
-            mMap.setMyLocationEnabled(true);
-            Log.e("maps", "home location success do work");
+            if (mCurrLocationMarker != null) {
+                mCurrLocationMarker.remove();
+            }
+
+            //Place current location marker
+            Log.e("homeLocationSuccess", "set new marker ");
+            LatLng latLng = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(latLng);
+            markerOptions.title("Current Position");
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+            mCurrLocationMarker = mMap.addMarker(markerOptions);
+
+            //move map camera
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
+
         }
+        /*
         // Logic to handle location object
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
         String format = simpleDateFormat.format(new Date());
@@ -473,56 +551,35 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 }
             }
         }).start();
-
+        */
         //start the services------------only if location is known
         //location updater service
-        if (!isMyServiceRunning(LocationUpdaterService.class)) {
-            Intent intent1 = new Intent(con, LocationUpdaterService.class);
-            startService(intent1);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check for the integer request code originally supplied to startResolutionForResult().
+        try {
+            mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            Log.e("settings mode now:::=",String.valueOf(mode));
+        } catch (Exception e) {
+            Log.e("settings mode=","exception setting not found");
+            e.printStackTrace();
         }
-    }
 
-    private void tryToGetLastLocation()
-    {
-        mFusedLocationClient.getLastLocation().addOnSuccessListener(activity, new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                locationObj=location;
+        if(mode!=3)
+            finish();
+        else
+        {
+            Log.e("okokok","everything setting  ok");
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            tryToRequestLocationOurself();
+        }
 
-            }
-        });
-    }
-
-    private void tryToRequestLocationOurself()
-    {
-        locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        //create locationCallback
-        locationCallback = new LocationCallback() {
-            public void OnLocationResult(LocationResult locationResult) {
-
-                if (locationResult == null) {
-                    return;
-                }
-                for (Location location : locationResult.getLocations()) {
-                    Log.e("on location change"," main ui thread location change callback");
-                    // Update UI with location data
-                    locationObj = location;
-                    locChanged= true;
-                }
-
-            }
-        };
-
-        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+        Log.e("on activity result rec=", String.valueOf(requestCode));
 
     }
-
-
-
 
     /**
      * Function to show settings alert dialog
@@ -553,6 +610,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
+                finish();
             }
         });
 
@@ -560,75 +618,22 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         alertDialog.show();
     }
 
-    private  void updateLocationInUI()
-    {
-        //mFusedLocationClient=== OPtion 1:: get last known location
-        tryToGetLastLocation();
-        //mFusedLocationClient=== OPtion 2:: request location ourself
-        if(locationObj==null)
-            tryToRequestLocationOurself();
 
-        //lets assume we successfully got the location
-        if(locationObj!=null){
-            homeLocationSuccessDoWork();
-            tryToRequestLocationOurself(); //to get periodic update on location change
+
+    //when this activity restarts or resumes check if the location service is running or not
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
         }
+        return false;
     }
 
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check for the integer request code originally supplied to startResolutionForResult().
-        try {
-            int mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.LOCATION_MODE);
-            Log.e("settings mode now:::=",String.valueOf(mode));
-            if(mode!=3)
-                finish();
-            else
-                {
-                    Log.e("okokok","everything ok");
-                    updateLocationInUI();
-                }
 
-        } catch (Exception e) {
-            Log.e("settings mode=","exception setting not found");
-            e.printStackTrace();
-        }
-        Log.e("on activity result rec=", String.valueOf(requestCode));
-
-    }
-
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    @SuppressLint("MissingPermission")
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        //changing the position of my location button
-        View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-        // position on right bottom
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
-        rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
-        rlp.setMargins(16, 200, 16, 16);
-
-        mMap.setMyLocationEnabled(true);
-
-        mUiSettings = mMap.getUiSettings();
-        mUiSettings.setCompassEnabled(true);
-        //mUiSettings.setZoomControlsEnabled(true);
-        mUiSettings.setAllGesturesEnabled(true);
-        Log.e("maps", "onMapReady Callback");
-
-    }
 
 
 
@@ -659,6 +664,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     @Override
     public void onResume() {
         super.onResume();
+        Log.e("on resume","on resume");
         navigationView.setCheckedItem(R.id.home_nav_home);
         isInFront = true;
     }
@@ -666,6 +672,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     @Override
     public void onPause() {
         super.onPause();
+        Log.e("on pause","on pause");
         isInFront = false;
     }
 
