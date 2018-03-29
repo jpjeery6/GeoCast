@@ -2,29 +2,25 @@ package jeeryweb.geocast.Activities;
 
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
-
-import android.util.Log;
-
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import android.content.Context;
-import android.location.Location;
-import android.os.Handler;
-
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -51,24 +47,21 @@ import java.util.HashMap;
 
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
 import jeeryweb.geocast.FirebaseServices.FirebaseRegistrationIntentService;
+import jeeryweb.geocast.R;
 import jeeryweb.geocast.Services.LocationUpdaterService;
 import jeeryweb.geocast.Utility.FileHelper;
 import jeeryweb.geocast.Utility.Network;
-
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 /**
  * This class 1.sends the FCM token to the server if running --for the first time-- in a separate thread
- *            2.uploads the last known location in a separate thread
- *            3.sends the message if send button clicked on a separate thread
- *
- *            4.Running a FirebaseRegisterIntentService for getting the token for the first time
- *            5.starting the LocationUpdater Service
- *            6.Starting the MessageRecieverService
- *
+ * 2.uploads the last known location in a separate thread
+ * 3.sends the message if send button clicked on a separate thread
+ * <p>
+ * 4.Running a FirebaseRegisterIntentService for getting the token for the first time
+ * 5.starting the LocationUpdater Service
+ * 6.Starting the MessageRecieverService
  */
-
-import jeeryweb.geocast.R;
-import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,OnMapReadyCallback {
 
@@ -117,7 +110,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         setContentView(R.layout.activity_home);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        statusCheck();
 
 
         /*
@@ -612,5 +605,45 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    public void statusCheck() {
+        final LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Toast.makeText(Home.this, "Gps not enabled",Toast.LENGTH_SHORT ).show();
+
+            if(!manager.isProviderEnabled( LocationManager.NETWORK_PROVIDER)){
+                Toast.makeText(Home.this, "Network provider not enabled",Toast.LENGTH_SHORT ).show();
+                buildAlertMessageNoGps();
+            }
+
+
+
+        }
+        getLocationMode(Home.class);
+        Toast.makeText(Home.this, "Location service is working fine",Toast.LENGTH_SHORT).show();
+    }
+
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+//                        Intent i = new Intent(Yourclassname.this,Home.class); startActivity(i);
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+    public int getLocationMode(Class context)
+    {
+        return  Settings.Secure.getString(this.getContentResolver(), Settings.Secure.LOCATION_MODE);
     }
 }
