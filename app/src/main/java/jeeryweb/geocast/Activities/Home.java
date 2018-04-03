@@ -1,9 +1,11 @@
 package jeeryweb.geocast.Activities;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +13,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.location.LocationListener;
 import android.net.ConnectivityManager;
 import android.os.Build;
@@ -22,6 +26,7 @@ import android.provider.*;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -39,6 +44,7 @@ import android.content.Context;
 import android.location.Location;
 import android.os.Handler;
 
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -47,31 +53,22 @@ import android.widget.Toast;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -80,8 +77,10 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
 import jeeryweb.geocast.FirebaseServices.FirebaseRegistrationIntentService;
@@ -104,61 +103,47 @@ import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
-public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,OnMapReadyCallback {
+public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
-//Attributes***************************************************************
+//Attributes***************************************************************************************
+
+    public boolean internet= true;
 
     //TAG for Logging
     private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
+    private final String nearbyusers = "https://jeeryweb.000webhostapp.com/ProjectLoc/getUserLocationsRealTime.php";
     private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsg.php";
     private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
     private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
     private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
-    public static boolean locChanged=false;
 
 
-    private BroadcastReceiver receiver;
-
-
-
-    //objects
+    //user defined class objects
     SharedPrefHandler sharedPrefHandler;
-    Handler handler;
+    Network network;
+    FileHelper fileHelper;
+
+    //Objects
+    private BroadcastReceiver receiver;
+    private static Handler handler;
     NavigationView navigationView;
     Context con;
     Activity activity;
-
 
 
     //globally required for location purpose
     private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
-    static Location locationObj;
+    private Location locationObj = null;
     private LocationRequest locationRequest;
     Marker mCurrLocationMarker;
-    /**
-     * Provides access to the Location Settings API.
-     */
-    private SettingsClient mSettingsClient;
-    /**
-     * Stores the types of location services the client is interested in using. Used for checking
-     * settings to determine if the device has optimal location settings.
-     */
-    private LocationSettingsRequest mLocationSettingsRequest;
-
-    /**
-     * Constant used in the location settings dialog.
-     */
-    private static final int REQUEST_CHECK_SETTINGS = 0x1;
+    Circle mcurrentCircle;
     private FusedLocationProviderClient mFusedLocationClient;
-    LocationUpdaterService locationUpdaterService;
+    List<Marker> nearbyMarkers;
+    List<LatLng> nearbyLatlang;
+    List<String> nearbyUsername;
 
-
-
-
-    Network network;
-    FileHelper fileHelper;
 
 
 
@@ -174,39 +159,44 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
 
-
+    //widgets
     View mapView;
     FloatingActionMenu sendMessageFab;
+    com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
 
 
-
-    @SuppressLint("MissingPermission")
+    @SuppressLint({"MissingPermission", "HandlerLeak"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         con = this;
-        activity= this;
+        activity = this;
 
 
         receiver = new BroadcastReceiver() {
-            final Snackbar snackbar=Snackbar.make(findViewById(R.id.home_content_parent), "No Internet Connection", Snackbar.LENGTH_INDEFINITE);
+            final Snackbar snackbar = Snackbar.make(findViewById(R.id.home_content_parent), "No Internet Connection", Snackbar.LENGTH_INDEFINITE);
+
             @Override
             public void onReceive(Context context, Intent arg1) {
                 //do something based on the intent's action
                 boolean isConnected = arg1.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
-                if(isConnected){
-                    Log.e("broadcast reciever","no network");
+                if (isConnected) {
+                    Log.e("broadcast reciever", "no network");
                     snackbar.show();
-                }
-                else{
-                    Log.e("broadcast reciever","network aagaya");
-                    if(snackbar!=null) {
+                    internet=false;
+                    fadeView();
+                } else {
+                    Log.e("broadcast reciever", "network aagaya");
+                    if (snackbar != null) {
+                        internet=true;
                         snackbar.dismiss();
-                        Log.e("broadcast reciever","snackbar  mila");
+                        restoreView();
+                        //Log.e("broadcast reciever", "snackbar  mila");
                     }
                 }
             }
@@ -216,8 +206,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
 
-        com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
-
+        //getting widgets
         sendMessageFab = (FloatingActionMenu) findViewById(R.id.sendmsg_floating_menu);
         emergencyMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.emergencymsgfab);
         customMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.custommsgfab);
@@ -225,48 +214,48 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //TODO something when floating action menu first item clicked
-                //send in built message directly
-                msg = "Please help me please";
+                if(internet) {
+                    //TODO something when floating action menu first item clicked
+                    //send in built message directly
+                    msg = "Please help me please";
 
-                //do this on a new thread
-                new Thread(new Runnable() {
-                    public void run() {                                                 //THREAD 4.............
-                        // a potentially  time consuming task
-                        if (locationObj != null) {
-                            network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
-                            result = network.DoWork();
-                            if (result != null) {
-                                Log.e(TAG, "send message main thread" + result);
-                                //pass this result to UI thread by writing a message to the UI's handler
-                                Message m = Message.obtain();
-                                Bundle bundle = new Bundle();
-                                bundle.putString("result", result);
-                                m.setData(bundle);
-                                handler.sendMessage(m);
+                    //do this on a new thread
+                    new Thread(new Runnable() {
+                        public void run() {                                                 //THREAD 4.............
+                            // a potentially  time consuming task
+                            if (locationObj != null) {
+                                network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
+                                result = network.DoWork();
+                                if (result != null && result.contains("\"success\":1")) {
+                                    Log.e(TAG, "send message main thread" + result);
+                                    //pass this result to UI thread by writing a message to the UI's handler
+                                    Message m = Message.obtain();
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("result", result);
+                                    m.setData(bundle);
+                                    handler.sendMessage(m);
+                                }
                             }
                         }
-                    }
-                }).start();
-                sendMessageFab.close(true);
-
+                    }).start();
+                    sendMessageFab.close(true);
+                }
             }
         });
         customMsgFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //TODO something when floating action menu second item clicked
-                MessageInputDialog messageInputDialog = new MessageInputDialog();
-                messageInputDialog.passFloatMenu(sendMessageFab);
-                messageInputDialog.show(getFragmentManager(), "customMsg");
-
+                if(internet) {
+                    //TODO something when floating action menu second item clicked
+                    MessageInputDialog messageInputDialog = new MessageInputDialog();
+                    messageInputDialog.passFloatMenu(sendMessageFab);
+                    messageInputDialog.show(getFragmentManager(), "customMsg");
+                }
             }
         });
         sendMessageFab.setClosedOnTouchOutside(true);
 
 
-
-
-
+        //navigation bar
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -280,6 +269,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         //getting navbar header items- image , name ,welcome
         View homeNavHeader = navigationView.getHeaderView(0);
         LinearLayout navHeaderLayout = (LinearLayout) homeNavHeader.findViewById(R.id.home_nav_layout);
+
+
 
         //setting up objects ................................................................................
         sharedPrefHandler = new SharedPrefHandler(this);
@@ -339,8 +330,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //setting up the map fragment view ...........................................................................
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapView = mapFragment.getView();
 
 
@@ -361,33 +353,55 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         //execution going to the callback
         mapFragment.getMapAsync(this);
 
-        /*
+
         mapView.post(new Runnable() {
             @Override
             public void run() {
-
-                if (mMap != null && locationObj!=null && locChanged ==true) {
-                    LatLng myloc = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(myloc).title("My Current Location"));
-                    LatLng coordinate = new LatLng(locationObj.getLatitude(), locationObj.getLongitude()); //Store these lat lng values somewhere. These should be constant.
-                    CameraUpdate cam = CameraUpdateFactory.newLatLngZoom(coordinate, 13);
-                    mMap.animateCamera(cam);
-                    mMap.setMyLocationEnabled(true);
-                    Log.e("post on create", "ui thread update");
-                    locChanged = false;
-                }
-                mapView.postDelayed(this,10000);
+                getRealTimeLocations();
+                homeLocationSuccessDoWork();
+                mapView.postDelayed(this,30000);
             }
         });
-        */
 
         //done-------------------------------------------------------------------------------------
 
-        handler = new Handler() {
+
+
+        handler = new Handler(Looper.getMainLooper()) {
+            Object sendMsg,getRealTime;
             @Override
             public void handleMessage(Message msg) {
-                result = msg.getData().get("result").toString();
-                Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
+                sendMsg = msg.getData().get("result");
+                if(sendMsg!=null) {
+                    sendMsg.toString();
+                    Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
+                }
+
+                getRealTime = msg.getData().get("resultRealTime");
+                if(getRealTime != null){
+                    //extract nearby users
+                    result = getRealTime.toString();
+                    String[] nearby=result.split("nearby");
+                    Log.e("no of nearby users",String.valueOf(nearby.length));
+                    nearbyLatlang = new ArrayList<>();
+                    nearbyMarkers = new ArrayList<>();
+                    nearbyUsername = new ArrayList<>();
+                    for(int i=1;i<nearby.length;i++)   //no of users nearby
+                    {
+                        Log.e("nearby[]",String.valueOf(i)+" :"+nearby[i]);
+                        String[] nearbylattlong=nearby[i].split("\\|");
+                        Log.e("location of 1 user",String.valueOf(nearbylattlong.length));
+                        //Log.e("nearbylattlong",nearbylattlong[0]);
+                        String nearUser = nearbylattlong[0];
+                        String nearbylatt = nearbylattlong[1];
+                        String nearbylong = nearbylattlong[2];         //each user's latt long
+                        //create new marker
+                        LatLng latLng = new LatLng(Double.valueOf(nearbylatt),Double.valueOf(nearbylong));
+                        nearbyLatlang.add(i-1,latLng);
+                        nearbyUsername.add(i-1,nearUser);
+                    }
+                    Log.e("nearby users",String.valueOf(nearby.length));
+                }
             }
         };
     }
@@ -395,21 +409,76 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
 
+    //it is an attribute
+    LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) {
+                //Log.e("location callback", "on result func called but locationResult is null");
+                //getLoc();
+            }
+            else {
+                //Log.e("location callback", "on result func called ");
+                    //homeLocationSuccessDoWork();
+                    locationObj = locationResult.getLastLocation();
+                for (Location location : locationResult.getLocations()) {
+                    //Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
+                    locationObj = location;
+                    //update home UI repeatedly in the for loop.
+                    //homeLocationSuccessDoWork();
+                }
+            }
+        }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+        @Override
+        public void onLocationAvailability(LocationAvailability locationAvailability) {
+            if(locationAvailability.isLocationAvailable()){
+                //returns true the onLocationResult may not always be called regularly, however the device location is known
+                //on result callback can happen
+                //Log.e("location callback", "location is available");
+                tryToGetLastLocation();
+
+            }
+            else{
+                //on location result will not be called
+                //Log.e("location callback", "location not available");
+                tryToGetLastLocation();
+            }
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
     @SuppressLint("MissingPermission")
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.e("maps", "onMapReady async callback");
 
+
+        //set a map style
+        try {
+            // Customise the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            boolean success = mMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.style_json));
+
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.");
+            }
+        } catch (Resources.NotFoundException e) {
+            Log.e(TAG, "Can't find style. Error: ", e);
+        }
         //my location button---------
         //changing the position of my location button
         View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
@@ -429,32 +498,38 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         mUiSettings.setAllGesturesEnabled(true);
         Log.e("maps", "map is ready with my location button and everything, get location now");
 
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                Log.e("info window clicked",marker.getTitle());
+                //go to MyProfile Activity
+                Intent i = new Intent(con, Reliability.class);
+                i.putExtra("Username",marker.getTitle());
+                con.startActivity(i);
+            }
+        });
+
         getLoc();
 
     }
 
 
-
-
-
-    private void getLoc()
-    {
+    private void getLoc() {
         //try to get current location
         //check settings first
         try {
-            mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), android.provider.Settings.Secure.LOCATION_MODE);
-            Log.e("settings mode::::=",String.valueOf(mode));
+            mode = android.provider.Settings.Secure.getInt(this.getContentResolver(), android.provider.Settings.Secure.LOCATION_MODE);
+            Log.e("settings mode::::=", String.valueOf(mode));
         } catch (Exception e) {
-            Log.e("settings mode=","exception setting not found");
+            Log.e("settings mode=", "exception setting not found");
             e.printStackTrace();
         }
-        if(mode==0)
+        if (mode == 0)
             showSettingsAlert(0); //ask to enable gps
-        else if(mode!=0 && mode!=3)
+        else if (mode != 0 && mode != 3)
             showSettingsAlert(1); //ask to set to high accuracy mode
-        else if(mode==3)
-        {
-            Log.e("get Loc","mode is 3 settings ok get loc now");
+        else if (mode == 3) {
+            Log.e("get Loc", "mode is 3 settings ok get loc now");
             //all settings ok try to get location
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
             tryToRequestLocationOurself();
@@ -464,27 +539,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
 
-    //it is an attribute
-    LocationCallback locationCallback = new LocationCallback(){
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null)
-                getLoc();
-            else {
-                //Log.e("location callback", "on result func called ");
-                for (Location location : locationResult.getLocations()) {
-                    Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
-                    locationObj = location;
-                    homeLocationSuccessDoWork();
-                }
-            }
-        }
-
-    };
-
-    private void tryToRequestLocationOurself()
-    {
-        Log.e("tryToReqOurself","entered func");
+    @SuppressLint("MissingPermission")
+    private void tryToRequestLocationOurself() {
+        Log.e("tryToReqOurself", "entered func");
         locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
@@ -495,34 +552,110 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             startService(intent1);
         }
 
-        Log.e("tryToReqOurself","requesting loca updtaes");
-        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback,Looper.myLooper());
+        Log.e("tryToReqOurself", "requesting loca updtaes");
 
+        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
+
+    }
+
+    private void tryToGetLastLocation()
+    {
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if(location == null){
+                    Log.e("tryTogetlastloc", "location is null");
+                }
+                else {
+                    Log.e("tryTogetlastloc", "got last location success");
+                    locationObj = location;
+                    //homeLocationSuccessDoWork();
+                }
+            }
+        });
+    }
+
+
+    private void getRealTimeLocations()
+    {
+        //get real time locations
+        //do this on a new thread
+        new Thread(new Runnable() {
+            public void run() {
+                // a potentially  time consuming task
+                if (locationObj != null) {
+                    network = new Network(nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
+                    result = network.DoWork();
+                    if (result != null && result.contains("nearby")) {
+                        Log.e("getreal time locs", "recieved locations");
+                        //pass this result to UI thread by writing a message to the UI's handler
+                        Message m = Message.obtain();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("resultRealTime", result);
+                        m.setData(bundle);
+                        handler.sendMessage(m);
+                    }
+                }
+            }
+        }).start();
     }
 
 
 
     void homeLocationSuccessDoWork() {
-
         //Got Location
-        //Log.e("homeLocationSuccess", "lets set the marker and update location to the server");
+        //Log.e("homeLocationSuccess", "entered func");
+        if(mMap==null)
+            Log.e("homeLocationSuccess","map is null");
+        if(locationObj==null)
+            Log.e("homeLocationSuccess", "locationObj is null");
+
         //set the marker in the map only if the map is already ready
         if (mMap != null && locationObj !=null) {
-            if (mCurrLocationMarker != null) {
+            if (mCurrLocationMarker != null)
                 mCurrLocationMarker.remove();
+            if(mcurrentCircle !=null)
+                mcurrentCircle.remove();
+            if(nearbyMarkers !=null) {
+                removeNearbyUsersMarker();
+                Log.e("homeLocationSuccess", "remove nearby users ");
             }
 
+
             //Place current location marker
-            Log.e("homeLocationSuccess", "set new marker ");
+            //Log.e("homeLocationSuccess", "set new marker ");
             LatLng latLng = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng);
-            markerOptions.title("Current Position");
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
             mCurrLocationMarker = mMap.addMarker(markerOptions);
 
+            //radius in metres
+
+            mcurrentCircle = mMap.addCircle(new CircleOptions()
+                    .center(latLng)
+                    .radius(10000)
+                    .strokeColor(getResources().getColor(R.color.primaryLightColor))
+                    .strokeWidth(4)
+                    .fillColor(0x22AAAAAA));
+
+
+            //place markers at nearby locations
+            if(nearbyLatlang != null) {
+                Log.e("nearbyLatlang=",String.valueOf(nearbyLatlang.size()));
+                for (int i = 0; i < nearbyLatlang.size(); i++)   //no of users nearby
+                {
+                    Log.e("nearby[]",String.valueOf(i)+" :");
+                    markerOptions = new MarkerOptions();
+                    markerOptions.position(nearbyLatlang.get(i));
+                    markerOptions.snippet("Set as Reliable User?");
+                    markerOptions.title(nearbyUsername.get(i));
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                    nearbyMarkers.add(i, mMap.addMarker(markerOptions));
+                }
+            }
             //move map camera
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
+            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
 
         }
         /*
@@ -614,6 +747,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         });
 
+        alertDialog.setCancelable(false);
+        Dialog gpsSettingDialog = alertDialog.create();
+        gpsSettingDialog.setCanceledOnTouchOutside(false);
         // Showing Alert Message
         alertDialog.show();
     }
@@ -629,6 +765,54 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         }
         return false;
+    }
+
+
+
+
+    private void removeNearbyUsersMarker()
+    {
+        if(nearbyMarkers != null) {
+            for (int i = 0; i < nearbyMarkers.size(); i++) {
+                Log.e("removing nearby markers","one after another");
+                nearbyMarkers.get(i).remove();
+            }
+        }
+    }
+
+    private void fadeView() {
+        View view = findViewById(R.id.home_content_parent);
+
+        sendMessageFab.setMenuButtonColorNormal(Color.WHITE);
+        sendMessageFab.setMenuButtonColorPressed(Color.WHITE);
+        sendMessageFab.setMenuButtonColorRipple(Color.WHITE);
+
+        emergencyMsgFab.setColorNormal(Color.WHITE);
+        emergencyMsgFab.setColorPressed(Color.WHITE);
+        emergencyMsgFab.setColorRipple(Color.WHITE);
+
+        customMsgFab.setColorNormal(Color.WHITE);
+        customMsgFab.setColorPressed(Color.WHITE);
+        customMsgFab.setColorRipple(Color.WHITE);
+    }
+
+    private void restoreView()
+    {
+        View v=findViewById(R.id.home_content_parent);
+
+        sendMessageFab.setMenuButtonColorNormal(getResources().getColor(R.color.colorPrimary));
+        sendMessageFab.setMenuButtonColorPressed(getResources().getColor(R.color.colorPrimaryDark));
+        sendMessageFab.setMenuButtonColorRipple(getResources().getColor(R.color.colorPrimaryDark));
+
+        emergencyMsgFab.setColorNormal(getResources().getColor(R.color.primaryLightColor));
+        emergencyMsgFab.setColorPressed(getResources().getColor(R.color.colorPrimary));
+        emergencyMsgFab.setColorRipple(getResources().getColor(R.color.colorPrimary));
+        emergencyMsgFab.setClickable(true);
+
+        customMsgFab.setColorNormal(getResources().getColor(R.color.primaryLightColor));
+        customMsgFab.setColorPressed(getResources().getColor(R.color.colorPrimary));
+        customMsgFab.setColorRipple(getResources().getColor(R.color.colorPrimary));
+        customMsgFab.setClickable(true);
     }
 
 
@@ -661,6 +845,14 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
 //States of a actvity and menu and navigation item selected methods*********************************
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(receiver);
+    }
+
     @Override
     public void onResume() {
         super.onResume();

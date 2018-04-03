@@ -35,6 +35,11 @@ public class SharedPrefHandler {
     public static final String FCM_TOKEN = "FCMToken";
 
     public static final String IMEI = "IMEI";
+    public static final String OCCUPATION = "Occupation";
+    public static final String AGE  = "Age";
+    public static final String GENDER = "Gender";
+    public static final String PHONENO = "PhoneNo";
+    public static final String PPPATH = "PPpath";
 
 
 //Methods
@@ -101,9 +106,49 @@ public class SharedPrefHandler {
         editor.putString(IMEI ,imei);
         editor.commit();
     }
+
+    public void savePPpath(String path){
+        editor.putString(PPPATH ,path);
+        editor.commit();
+    }
+
+    public String  getPPpath(){
+        return pref.getString(PPPATH, null);
+    }
+
+    public void saveBio(String occupation,String gender,String age,String phno){
+        editor.putString(OCCUPATION ,occupation);
+        editor.putString(GENDER ,gender);
+        editor.putString(AGE ,age);
+        editor.putString(PHONENO ,phno);
+        editor.commit();
+    }
+
+    public String getUsername()
+    {
+        return pref.getString(KEY_NAME, null);
+    }
+
     public String getIMEI()
     {
         return pref.getString(IMEI, null);
     }
+    public String getOccupation()
+    {
+        return pref.getString(OCCUPATION, null);
+    }
+    public String getAge()
+    {
+        return pref.getString(AGE, null);
+    }
+    public String getGender()
+    {
+        return pref.getString(GENDER, null);
+    }
+    public String getPhoneNo()
+    {
+        return pref.getString(PHONENO, null);
+    }
+
 
 }

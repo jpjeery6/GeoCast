@@ -53,7 +53,7 @@ public class Register extends AppCompatActivity {
 //Attributes*************************************************************
 
     private final String reg ="https://jeeryweb.000webhostapp.com/ProjectLoc/register.php";
-    private final String url_uplaod = "http://fcmapi.000webhostapp.com/savePropic.php";
+    private final String url_uplaod = "https://jeeryweb.000webhostapp.com/ProjectLoc/saveProPic.php";
     private final String TAG=getClass().getSimpleName()+" LoginActivity";
 
     //objects
@@ -196,12 +196,19 @@ public class Register extends AppCompatActivity {
 
         int selectedId = bioGender.getCheckedRadioButtonId();
         RadioButton bioGendervalue = (RadioButton) findViewById(selectedId);
+        String phnonull;
 
 
         bio = bioAge.getText().toString() + '|' + bioOccupation.getText().toString() + '|' + bioGendervalue.getText().toString();
         String reEnterPassword = regpass2.getText().toString();
         fcmtoken = session.getFcmToken();
         phonevalue = phone.getText().toString();
+
+        if(phonevalue==null)
+            phnonull="NA";
+        //save all info to show on profile page
+        session.saveBio(bioOccupation.getText().toString(),bioGendervalue.getText().toString(),bioAge.getText().toString(),phonevalue);
+
 
         Log.d(TAG, "Data "+uss+pas+bio+imeiNumber);
         new Thread(new Runnable() {

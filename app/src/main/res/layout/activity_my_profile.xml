@@ -9,28 +9,40 @@
     android:orientation="vertical">
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="250dp">
-        <LinearLayout
-            android:background="@drawable/side_nav_bar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+        android:layout_height="250dp"
+        android:background="@drawable/side_nav_bar">
+
             <ImageView
-                android:layout_marginTop="45dp"
-                android:layout_gravity="center_horizontal"
+                android:id="@+id/activity_myprofile_pp"
+                android:layout_marginTop="0dp"
+                android:layout_centerInParent="true"
                 android:layout_width="150dp"
                 android:layout_height="150dp"
                 android:src="@drawable/ic_user"/>
+
+            <ImageButton
+                android:id="@+id/activity_myprofile_addimagebutton"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginTop="52dp"
+                android:layout_alignEnd="@+id/activity_myprofile_pp"
+                android:src="@drawable/ic_add_black" />
+
+
+
             <TextView
+                android:id="@+id/activity_myprofile_username"
                 android:layout_marginTop="10dp"
-                android:layout_gravity="center_horizontal"
+                android:layout_below="@+id/activity_myprofile_pp"
+                android:layout_centerHorizontal="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Username"
                 android:textColor="#fff"
                 android:textStyle="bold"
-                android:textSize="21sp"/>
-        </LinearLayout>
+                android:textSize="21sp">
+
+            </TextView>
 
 
     </RelativeLayout>
@@ -52,6 +64,7 @@
                 android:src="@drawable/ic_profession"/>
             <TextView
                 android:textStyle="bold"
+                android:id="@+id/activity_myprofile_profession"
                 android:layout_gravity="center_vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -70,7 +83,7 @@
                 android:src="@drawable/ic_gender"/>
             <TextView
                 android:textStyle="bold"
-
+                android:id="@+id/activity_myprofile_gender"
                 android:layout_gravity="center_vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -89,7 +102,7 @@
                 android:src="@drawable/ic_age"/>
             <TextView
                 android:textStyle="bold"
-
+                android:id="@+id/activity_myprofile_age"
                 android:layout_gravity="center_vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -107,6 +120,7 @@
                 android:layout_height="36dp"
                 android:src="@drawable/ic_phone"/>
             <TextView
+                android:id="@+id/activity_myprofile_phno"
                 android:textStyle="bold"
                 android:layout_gravity="center_vertical"
                 android:layout_width="wrap_content"

@@ -52,7 +52,6 @@ public class LocationUpdaterService extends Service {
         public void onLocationChanged(Location location)
         {
             Log.e("LocationUpdaterService", "onLocationChanged: " + location);
-            Home.locChanged=true;
             mLastLocation.set(location);
             latt=Double.toString(location.getLatitude());
             longi=Double.toString(location.getLongitude());

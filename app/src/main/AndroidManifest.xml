@@ -49,14 +49,11 @@
         </activity>
 
         <activity android:name=".Activities.Settings" />
-        <activity android:name=".Activities.OthersProfile" />
+        <activity android:name=".Activities.Reliability" />
         <activity android:name=".Activities.InboxMessage" />
         <activity android:name=".Activities.SentMessage" />
         <activity
             android:name=".Activities.Register"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".Activities.Splash"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".Activities.Login"
