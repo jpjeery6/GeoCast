@@ -359,7 +359,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             public void run() {
                 getRealTimeLocations();
                 homeLocationSuccessDoWork();
-                mapView.postDelayed(this,30000);
+                mapView.postDelayed(this,10000);
             }
         });
 
@@ -503,7 +503,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             public void onInfoWindowClick(Marker marker) {
                 Log.e("info window clicked",marker.getTitle());
                 //go to MyProfile Activity
-                Intent i = new Intent(con, Reliability.class);
+                Intent i = new Intent(con, ReliabilityRequest.class);
                 i.putExtra("Username",marker.getTitle());
                 con.startActivity(i);
             }

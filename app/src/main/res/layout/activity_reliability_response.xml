@@ -7,7 +7,7 @@
     android:padding="10dp"
     android:background="@color/colorLightGrayLine"
     android:orientation="vertical"
-    tools:context="jeeryweb.geocast.Activities.Reliability">
+    tools:context="jeeryweb.geocast.Activities.ReliabilityResponse">
 
     <android.support.v7.widget.CardView
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -28,7 +28,7 @@
                 android:layout_weight="3">
                 <de.hdodenhof.circleimageview.CircleImageView
                     xmlns:app="http://schemas.android.com/apk/lib/com.mikhaellopez.circularimageviewsample"
-                    android:id="@+id/activity_reliability_image"
+                    android:id="@+id/activity_reliabilityres_image"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:layout_centerVertical="true"
@@ -41,24 +41,24 @@
                 <TextView
                     android:layout_centerVertical="true"
                     android:layout_marginLeft="30dp"
-                    android:id="@+id/activity_reliability_Username"
+                    android:id="@+id/activity_reliabilityres_Username"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Username"
-                    android:layout_toRightOf="@+id/activity_reliability_image"
+                    android:layout_toRightOf="@+id/activity_reliabilityres_image"
                     android:textSize="20sp" />
             </RelativeLayout>
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="3">
+                android:layout_weight="2">
                 <TextView
                     android:layout_margin="20dp"
-                    android:id="@+id/activity_reliability_summary"
+                    android:id="@+id/activity_reliabilityres_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
                 <ProgressBar
-                    android:id="@+id/activity_reliability_progressbar"
+                    android:id="@+id/activity_reliabilityres_progressbar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"/>
@@ -67,14 +67,14 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="4">
+                android:layout_weight="5">
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/activity_reliability_phno_lay"
+                    android:id="@+id/activity_reliabilityres_phno_lay"
                     android:theme="@style/AppTheme">
-                    <EditText android:id="@+id/activity_reliability_phno"
+                    <EditText android:id="@+id/activity_reliabilityres_phno"
                         android:layout_width="match_parent"
                         android:layout_margin="10dp"
                         android:layout_height="wrap_content"
@@ -84,42 +84,47 @@
 
                 <TextView
                     android:layout_marginLeft="10dp"
-                    android:id="@+id/activity_reliability_txt1"
-                    android:layout_below="@+id/activity_reliability_phno_lay"
+                    android:id="@+id/activity_reliabilityres_txt1"
+                    android:layout_below="@+id/activity_reliabilityres_phno_lay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="18sp"
-                    android:text="Do you want to set the User as Reliable?"
+                    android:text="dash has sent u a reliability request"
                     />
                 <LinearLayout
-                    android:layout_below="@+id/activity_reliability_txt1"
+                    android:layout_below="@+id/activity_reliabilityres_txt1"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:weightSum="5">
+                    android:id="@+id/activity_reliabilityres_btns"
+                    android:layout_height="wrap_content"
+                    android:weightSum="4">
 
-                    <TextView
+                    <Button
                         android:layout_marginLeft="10dp"
-                        android:id="@+id/activity_reliability_txt2"
-                        android:layout_marginTop="5dp"
-                        android:layout_below="@+id/activity_reliability_txt1"
-                        android:layout_width="0dp"
-                        android:layout_weight="4"
+                        android:text="Deny"
+                        android:id="@+id/activity_reliabilityres_btndeny"
+                        android:layout_below="@+id/activity_reliabilityres_txt1"
+                        android:layout_width="wrap_content"
+                        android:layout_margin="10dp"
+                        android:layout_weight="2"
                         android:layout_height="wrap_content"
-                        android:text="A Reliable User is one with whom you will be establishing contact over the phone.On clicking yes your phone number will be send to him and you will be asked to enter the passcode which you will get from him."
                         />
-                    <ImageButton
-                        android:background="@color/colorWhite"
+                    <Button
+                        android:text="confirm"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/ic_menu_send_color"
-                        android:layout_marginTop="30dp"
-                        android:layout_weight="1"
-                        android:layout_marginLeft="5dp"
-                        android:layout_marginRight="2dp"
-                        android:id="@+id/activity_reliability_button"
+                        android:layout_weight="2"
+                        android:layout_margin="10dp"
+                        android:id="@+id/activity_reliabilityres_btnconf"
 
                         />
                 </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_margin="10dp"
+                    android:layout_below="@+id/activity_reliabilityres_btns"
+                    android:layout_height="wrap_content"
+                    android:text="A Reliable User is one with whom you will be establishing contact over the phone.On Confirmining Your phone number will be shared and both of you will become reliable users for one another"
+                    />
             </RelativeLayout>
         </LinearLayout>
 

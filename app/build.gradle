@@ -36,7 +36,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-maps:11.8.0'
     compile 'com.google.android.gms:play-services:11.8.0'
 
-
     //simple small library for circular image in contacts listview
     compile 'de.hdodenhof:circleimageview:1.2.1'
     //library for floating action button behaivour

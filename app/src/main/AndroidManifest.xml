@@ -28,14 +28,12 @@
             android:name=".Activities.Inbox"
             android:label="@string/title_activity_inbox"
             android:theme="@style/AppTheme.NoActionBar">
-
             <intent-filter>
                 <action android:name="CONTACTS" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
         </activity>
-
         <activity
             android:name=".Activities.Sent"
             android:label="@string/title_activity_sent"
@@ -47,9 +45,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".Activities.Home" />
         </activity>
-
         <activity android:name=".Activities.Settings" />
-        <activity android:name=".Activities.Reliability" />
+        <activity android:name=".Activities.Reliabilities" >
+            <intent-filter>
+                <action android:name="RELIABLERES" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+        </activity>
         <activity android:name=".Activities.InboxMessage" />
         <activity android:name=".Activities.SentMessage" />
         <activity
@@ -60,11 +64,10 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-
 
         <service
             android:name=".FirebaseServices.FirebaseRegistrationIntentService"
@@ -85,12 +88,18 @@
         </service>
         <service android:name=".Services.LocationUpdaterService" />
 
-
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
+        <activity android:name=".Activities.ReliabilityRequest" />
+        <activity android:name=".Activities.ReliabilityResponse" >
+            <intent-filter>
+                <action android:name="RELIABLEREQ" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

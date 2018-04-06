@@ -35,6 +35,14 @@ public class FirebaseMessageHandlerService extends FirebaseMessagingService {
 //Method 1
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
+        //determine what type of message it is
+        //type 1: message
+        //type 2: reliability request
+        //type 3: reliability response yes
+        //type 4: reliability response no
+
+
+
         Map<String, String> data = remoteMessage.getData();
         String from = remoteMessage.getFrom();
         Log.e("OnMessageRecieved","message");
@@ -60,13 +68,26 @@ public class FirebaseMessageHandlerService extends FirebaseMessagingService {
             Log.e("OnMessageRecieved", "message longi = " + senderLong);
             Log.e("OnMessageRecieved ", "message click = " + clickAction);
 
-            fileHelper.writeFile(this,sender,body, timestmp, senderLatt,senderLong);
+
+            //type 1 message
+            if(clickAction.contains("CONTACTS"))
+                fileHelper.writeFile(this,sender,body, timestmp, senderLatt,senderLong);
 
 
-            //create notification
             //onclick open the message activity
             Intent intent = new Intent(clickAction);
 
+            //type 2: reliablity req
+            if(clickAction.contains("RELIABLEREQ"))
+                intent.putExtra("RReqUsername",sender);
+            //type 3: reliable response yes  //type 4: reliable response no
+            //load reliabilities activity with no info
+            //if(clickAction.contains("RELIABILITIES"))
+                //start reliabilities activity
+                //show newest on top  of the list with a color if possible
+
+
+            //create notification
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
 
