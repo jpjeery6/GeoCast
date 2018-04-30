@@ -46,14 +46,6 @@
                 android:value=".Activities.Home" />
         </activity>
         <activity android:name=".Activities.Settings" />
-        <activity android:name=".Activities.Reliabilities" >
-            <intent-filter>
-                <action android:name="RELIABLERES" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-
-        </activity>
         <activity android:name=".Activities.InboxMessage" />
         <activity android:name=".Activities.SentMessage" />
         <activity
@@ -88,18 +80,23 @@
         </service>
         <service android:name=".Services.LocationUpdaterService" />
 
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
         <activity android:name=".Activities.ReliabilityRequest" />
-        <activity android:name=".Activities.ReliabilityResponse" >
+        <activity android:name=".Activities.ReliabilityResponse">
             <intent-filter>
                 <action android:name="RELIABLEREQ" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".Activities.Reliabilities"
+            android:label="@string/title_activity_reliabilities"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

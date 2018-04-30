@@ -1,50 +1,36 @@
 package jeeryweb.geocast.Activities;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-
 import android.content.IntentFilter;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.location.LocationListener;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-
-import android.provider.*;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
-
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import android.content.Context;
-import android.location.Location;
-import android.os.Handler;
-
-import android.view.ViewGroup;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -53,7 +39,6 @@ import android.widget.Toast;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -71,44 +56,35 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
-import jeeryweb.geocast.FirebaseServices.FirebaseRegistrationIntentService;
+import jeeryweb.geocast.R;
 import jeeryweb.geocast.Services.LocationUpdaterService;
 import jeeryweb.geocast.Utility.FileHelper;
 import jeeryweb.geocast.Utility.Network;
-
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 /**
  * This class 1.sends the FCM token to the server if running --for the first time-- in a separate thread
- *            2.uploads the last known location in a separate thread
- *            3.sends the message if send button clicked on a separate thread
- *
- *            4.Running a FirebaseRegisterIntentService for getting the token for the first time
- *            5.starting the LocationUpdater Service
- *            6.Starting the MessageRecieverService
- *
+ * 2.uploads the last known location in a separate thread
+ * 3.sends the message if send button clicked on a separate thread
+ * <p>
+ * 4.Running a FirebaseRegisterIntentService for getting the token for the first time
+ * 5.starting the LocationUpdater Service
+ * 6.Starting the MessageRecieverService
  */
-
-import jeeryweb.geocast.R;
-import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
 //Attributes***************************************************************************************
 
-    public boolean internet= true;
-
+    public static String username, password;
+    private static Handler handler;
     //TAG for Logging
     private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
     private final String nearbyusers = "https://jeeryweb.000webhostapp.com/ProjectLoc/getUserLocationsRealTime.php";
@@ -116,54 +92,76 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
     private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
     private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
-
-
+    //Variables
+    private final String TAG = getClass().getSimpleName();
+    public boolean internet = true;
+    //to check if my activity is the current activity
+    public boolean isInFront;
     //user defined class objects
     SharedPrefHandler sharedPrefHandler;
     Network network;
     FileHelper fileHelper;
-
-    //Objects
-    private BroadcastReceiver receiver;
-    private static Handler handler;
     NavigationView navigationView;
     Context con;
     Activity activity;
-
-
+    Marker mCurrLocationMarker;
+    Circle mcurrentCircle;
+    List<Marker> nearbyMarkers;
+    List<LatLng> nearbyLatlang;
+    List<String> nearbyUsername;
+    String fcmToken;
+    String msg, result;
+    //widgets
+    View mapView;
+    FloatingActionMenu sendMessageFab;
+    com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
+    //Objects
+    private BroadcastReceiver receiver;
     //globally required for location purpose
     private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
     private Location locationObj = null;
     private LocationRequest locationRequest;
-    Marker mCurrLocationMarker;
-    Circle mcurrentCircle;
     private FusedLocationProviderClient mFusedLocationClient;
-    List<Marker> nearbyMarkers;
-    List<LatLng> nearbyLatlang;
-    List<String> nearbyUsername;
+    //it is an attribute
+    LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) {
+                //Log.e("location callback", "on result func called but locationResult is null");
+                //getLoc();
+            } else {
+                //Log.e("location callback", "on result func called ");
+                //homeLocationSuccessDoWork();
+                locationObj = locationResult.getLastLocation();
+                for (Location location : locationResult.getLocations()) {
+                    //Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
+                    locationObj = location;
+                    //update home UI repeatedly in the for loop.
+                    //homeLocationSuccessDoWork();
+                }
+            }
+        }
 
+        @Override
+        public void onLocationAvailability(LocationAvailability locationAvailability) {
+            if (locationAvailability.isLocationAvailable()) {
+                //returns true the onLocationResult may not always be called regularly, however the device location is known
+                //on result callback can happen
+                //Log.e("location callback", "location is available");
+                tryToGetLastLocation();
 
-
-
-    //Variables
-    private final String TAG = getClass().getSimpleName();
-    //to check if my activity is the current activity
-    public boolean isInFront;
+            } else {
+                //on location result will not be called
+                //Log.e("location callback", "location not available");
+                tryToGetLastLocation();
+            }
+        }
+    };
     //to check if the app is run for the first time
     private boolean firstTime;
-    static String username, password;
-    String fcmToken;
-    String msg, result;
-
-
-
-    //widgets
-    View mapView;
-    FloatingActionMenu sendMessageFab;
-    com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
-
+    //on create ends here***************************************************************************
 
     @SuppressLint({"MissingPermission", "HandlerLeak"})
     @Override
@@ -188,12 +186,12 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 if (isConnected) {
                     Log.e("broadcast reciever", "no network");
                     snackbar.show();
-                    internet=false;
+                    internet = false;
                     fadeView();
                 } else {
                     Log.e("broadcast reciever", "network aagaya");
                     if (snackbar != null) {
-                        internet=true;
+                        internet = true;
                         snackbar.dismiss();
                         restoreView();
                         //Log.e("broadcast reciever", "snackbar  mila");
@@ -204,8 +202,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         registerReceiver(receiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 
 
-
-
         //getting widgets
         sendMessageFab = (FloatingActionMenu) findViewById(R.id.sendmsg_floating_menu);
         emergencyMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.emergencymsgfab);
@@ -214,7 +210,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(internet) {
+                if (internet) {
                     //TODO something when floating action menu first item clicked
                     //send in built message directly
                     msg = "Please help me please";
@@ -226,8 +222,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                             if (locationObj != null) {
                                 network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
                                 result = network.DoWork();
-                                if (result != null && result.contains("\"success\":1")) {
-                                    Log.e(TAG, "send message main thread" + result);
+                                if (result != null && result.contains("sent")) {
+                                    //Log.e(TAG, "send message main thread" + result);
                                     //pass this result to UI thread by writing a message to the UI's handler
                                     Message m = Message.obtain();
                                     Bundle bundle = new Bundle();
@@ -244,7 +240,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         });
         customMsgFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(internet) {
+                if (internet) {
                     //TODO something when floating action menu second item clicked
                     MessageInputDialog messageInputDialog = new MessageInputDialog();
                     messageInputDialog.passFloatMenu(sendMessageFab);
@@ -269,7 +265,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         //getting navbar header items- image , name ,welcome
         View homeNavHeader = navigationView.getHeaderView(0);
         LinearLayout navHeaderLayout = (LinearLayout) homeNavHeader.findViewById(R.id.home_nav_layout);
-
 
 
         //setting up objects ................................................................................
@@ -297,8 +292,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             fileHelper.createFile(this);
             //noone should interrupt while registering so doing it in a service
             if (checkPlayServices()) {
-                Intent intent = new Intent(this, FirebaseRegistrationIntentService.class);
-                startService(intent);
+                //here we should have taken the firebase token but it is generated earlier only
+                Log.e("googlePlayServices", "yes");
             }
             fcmToken = sharedPrefHandler.getFcmToken();
             if (username != null && password != null & fcmToken != null) {
@@ -316,6 +311,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         } else {
             Log.e(TAG, "first time no");
             fcmToken = sharedPrefHandler.getFcmToken();
+            //even if it is not the first time upload the fcm token in case it has changed
             Log.e(TAG + " retrieved token:", fcmToken);
         }
 
@@ -366,98 +362,45 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         //done-------------------------------------------------------------------------------------
 
 
-
         handler = new Handler(Looper.getMainLooper()) {
-            Object sendMsg,getRealTime;
+            Object sendMsg, getRealTime;
+
             @Override
             public void handleMessage(Message msg) {
                 sendMsg = msg.getData().get("result");
-                if(sendMsg!=null) {
+                if (sendMsg != null) {
                     sendMsg.toString();
                     Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
                 }
 
                 getRealTime = msg.getData().get("resultRealTime");
-                if(getRealTime != null){
+                if (getRealTime != null) {
                     //extract nearby users
                     result = getRealTime.toString();
-                    String[] nearby=result.split("nearby");
-                    Log.e("no of nearby users",String.valueOf(nearby.length));
+                    String[] nearby = result.split("nearby");
+                    Log.e("no of nearby users", String.valueOf(nearby.length));
                     nearbyLatlang = new ArrayList<>();
                     nearbyMarkers = new ArrayList<>();
                     nearbyUsername = new ArrayList<>();
-                    for(int i=1;i<nearby.length;i++)   //no of users nearby
+                    for (int i = 1; i < nearby.length; i++)   //no of users nearby
                     {
-                        Log.e("nearby[]",String.valueOf(i)+" :"+nearby[i]);
-                        String[] nearbylattlong=nearby[i].split("\\|");
-                        Log.e("location of 1 user",String.valueOf(nearbylattlong.length));
+                        Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
+                        String[] nearbylattlong = nearby[i].split("\\|");
+                        Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
                         //Log.e("nearbylattlong",nearbylattlong[0]);
                         String nearUser = nearbylattlong[0];
                         String nearbylatt = nearbylattlong[1];
                         String nearbylong = nearbylattlong[2];         //each user's latt long
                         //create new marker
-                        LatLng latLng = new LatLng(Double.valueOf(nearbylatt),Double.valueOf(nearbylong));
-                        nearbyLatlang.add(i-1,latLng);
-                        nearbyUsername.add(i-1,nearUser);
+                        LatLng latLng = new LatLng(Double.valueOf(nearbylatt), Double.valueOf(nearbylong));
+                        nearbyLatlang.add(i - 1, latLng);
+                        nearbyUsername.add(i - 1, nearUser);
                     }
-                    Log.e("nearby users",String.valueOf(nearby.length));
+                    Log.e("nearby users", String.valueOf(nearby.length));
                 }
             }
         };
     }
-    //on create ends here***************************************************************************
-
-
-
-    //it is an attribute
-    LocationCallback locationCallback = new LocationCallback() {
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null) {
-                //Log.e("location callback", "on result func called but locationResult is null");
-                //getLoc();
-            }
-            else {
-                //Log.e("location callback", "on result func called ");
-                    //homeLocationSuccessDoWork();
-                    locationObj = locationResult.getLastLocation();
-                for (Location location : locationResult.getLocations()) {
-                    //Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
-                    locationObj = location;
-                    //update home UI repeatedly in the for loop.
-                    //homeLocationSuccessDoWork();
-                }
-            }
-        }
-
-        @Override
-        public void onLocationAvailability(LocationAvailability locationAvailability) {
-            if(locationAvailability.isLocationAvailable()){
-                //returns true the onLocationResult may not always be called regularly, however the device location is known
-                //on result callback can happen
-                //Log.e("location callback", "location is available");
-                tryToGetLastLocation();
-
-            }
-            else{
-                //on location result will not be called
-                //Log.e("location callback", "location not available");
-                tryToGetLastLocation();
-            }
-        }
-    };
-
-
-
-
-
-
-
-
-
-
-
-
 
     @SuppressLint("MissingPermission")
     public void onMapReady(GoogleMap googleMap) {
@@ -501,10 +444,10 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                Log.e("info window clicked",marker.getTitle());
+                Log.e("info window clicked", marker.getTitle());
                 //go to MyProfile Activity
                 Intent i = new Intent(con, ReliabilityRequest.class);
-                i.putExtra("Username",marker.getTitle());
+                i.putExtra("Username", marker.getTitle());
                 con.startActivity(i);
             }
         });
@@ -538,7 +481,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-
     @SuppressLint("MissingPermission")
     private void tryToRequestLocationOurself() {
         Log.e("tryToReqOurself", "entered func");
@@ -558,15 +500,14 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
     }
 
-    private void tryToGetLastLocation()
-    {
+    @SuppressLint("MissingPermission")
+    private void tryToGetLastLocation() {
         mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
-                if(location == null){
+                if (location == null) {
                     Log.e("tryTogetlastloc", "location is null");
-                }
-                else {
+                } else {
                     Log.e("tryTogetlastloc", "got last location success");
                     locationObj = location;
                     //homeLocationSuccessDoWork();
@@ -576,8 +517,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-    private void getRealTimeLocations()
-    {
+    private void getRealTimeLocations() {
         //get real time locations
         //do this on a new thread
         new Thread(new Runnable() {
@@ -601,22 +541,21 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-
     void homeLocationSuccessDoWork() {
         //Got Location
         //Log.e("homeLocationSuccess", "entered func");
-        if(mMap==null)
-            Log.e("homeLocationSuccess","map is null");
-        if(locationObj==null)
+        if (mMap == null)
+            Log.e("homeLocationSuccess", "map is null");
+        if (locationObj == null)
             Log.e("homeLocationSuccess", "locationObj is null");
 
         //set the marker in the map only if the map is already ready
-        if (mMap != null && locationObj !=null) {
+        if (mMap != null && locationObj != null) {
             if (mCurrLocationMarker != null)
                 mCurrLocationMarker.remove();
-            if(mcurrentCircle !=null)
+            if (mcurrentCircle != null)
                 mcurrentCircle.remove();
-            if(nearbyMarkers !=null) {
+            if (nearbyMarkers != null) {
                 removeNearbyUsersMarker();
                 Log.e("homeLocationSuccess", "remove nearby users ");
             }
@@ -641,11 +580,11 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
             //place markers at nearby locations
-            if(nearbyLatlang != null) {
-                Log.e("nearbyLatlang=",String.valueOf(nearbyLatlang.size()));
+            if (nearbyLatlang != null) {
+                Log.e("nearbyLatlang=", String.valueOf(nearbyLatlang.size()));
                 for (int i = 0; i < nearbyLatlang.size(); i++)   //no of users nearby
                 {
-                    Log.e("nearby[]",String.valueOf(i)+" :");
+                    Log.e("nearby[]", String.valueOf(i) + " :");
                     markerOptions = new MarkerOptions();
                     markerOptions.position(nearbyLatlang.get(i));
                     markerOptions.snippet("Set as Reliable User?");
@@ -694,18 +633,17 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check for the integer request code originally supplied to startResolutionForResult().
         try {
-            mode= android.provider.Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.LOCATION_MODE);
-            Log.e("settings mode now:::=",String.valueOf(mode));
+            mode = android.provider.Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            Log.e("settings mode now:::=", String.valueOf(mode));
         } catch (Exception e) {
-            Log.e("settings mode=","exception setting not found");
+            Log.e("settings mode=", "exception setting not found");
             e.printStackTrace();
         }
 
-        if(mode!=3)
+        if (mode != 3)
             finish();
-        else
-        {
-            Log.e("okokok","everything setting  ok");
+        else {
+            Log.e("okokok", "everything setting  ok");
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
             tryToRequestLocationOurself();
         }
@@ -717,25 +655,25 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     /**
      * Function to show settings alert dialog
      * On pressing Settings button will lauch Settings Options
-     * */
+     */
 
-    public void showSettingsAlert(int mode){
+    public void showSettingsAlert(int mode) {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(con);
 
         // Setting Dialog Title
         alertDialog.setTitle("GPS settings");
 
         // Setting Dialog Message
-        if(mode == 0)
+        if (mode == 0)
             alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
-        else if(mode ==1)
+        else if (mode == 1)
             alertDialog.setMessage("GPS is not set to High Accuracy Mode. Do you want to go to settings menu?");
 
         // On pressing Settings button
         alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivityForResult(intent,103);
+                startActivityForResult(intent, 103);
             }
         });
 
@@ -755,7 +693,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-
     //when this activity restarts or resumes check if the location service is running or not
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -768,13 +705,10 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-
-
-    private void removeNearbyUsersMarker()
-    {
-        if(nearbyMarkers != null) {
+    private void removeNearbyUsersMarker() {
+        if (nearbyMarkers != null) {
             for (int i = 0; i < nearbyMarkers.size(); i++) {
-                Log.e("removing nearby markers","one after another");
+                Log.e("removing nearby markers", "one after another");
                 nearbyMarkers.get(i).remove();
             }
         }
@@ -796,9 +730,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         customMsgFab.setColorRipple(Color.WHITE);
     }
 
-    private void restoreView()
-    {
-        View v=findViewById(R.id.home_content_parent);
+    private void restoreView() {
+        View v = findViewById(R.id.home_content_parent);
 
         sendMessageFab.setMenuButtonColorNormal(getResources().getColor(R.color.colorPrimary));
         sendMessageFab.setMenuButtonColorPressed(getResources().getColor(R.color.colorPrimaryDark));
@@ -814,11 +747,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         customMsgFab.setColorRipple(getResources().getColor(R.color.colorPrimary));
         customMsgFab.setClickable(true);
     }
-
-
-
-
-
 
 
     /**
@@ -843,7 +771,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-
 //States of a actvity and menu and navigation item selected methods*********************************
 
 
@@ -856,7 +783,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     @Override
     public void onResume() {
         super.onResume();
-        Log.e("on resume","on resume");
+        Log.e("on resume", "on resume");
         navigationView.setCheckedItem(R.id.home_nav_home);
         isInFront = true;
     }
@@ -864,7 +791,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     @Override
     public void onPause() {
         super.onPause();
-        Log.e("on pause","on pause");
+        Log.e("on pause", "on pause");
         isInFront = false;
     }
 
@@ -874,12 +801,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        }
-        else if(sendMessageFab.isOpened())
-        {
+        } else if (sendMessageFab.isOpened()) {
             sendMessageFab.close(true);
-        }
-        else {
+        } else {
             super.onBackPressed();
         }
     }
@@ -901,7 +825,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         //noinspection SimplifiableIfStatement
         if (id == R.id.home_action_logout) {
             //logout...................................................................................................
-            Log.e("nav_logout= ","true");
+            Log.e("nav_logout= ", "true");
             AlertDialog.Builder builder;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 builder = new AlertDialog.Builder(con, android.R.style.Theme_Material_Dialog_Alert);
@@ -914,7 +838,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                         public void onClick(DialogInterface dialog, int which) {
                             // continue with delete
                             sharedPrefHandler.logoutUser(con);
-                            fileHelper =new FileHelper();
+                            fileHelper = new FileHelper();
                             fileHelper.deleteFile(con);
 
                             //set loggedIn bit in database to Zero
@@ -922,7 +846,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                             new Thread(new Runnable() {
                                 public void run() {                                                     //THREAD 3............
                                     // a potentially  time consuming task
-                                    network = new Network(lgot, username, password, "dummy", "00.00","00.00", "dummy",null,null,null,null);
+                                    network = new Network(lgot, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
                                     result = network.DoWork();
                                     if (result != null) {
                                         Log.e(TAG, "toast main thread" + result);
@@ -948,16 +872,14 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             //logout done
 
             return true;
-        }
-        else if(id == R.id.home_action_downloadchat)
-        {
+        } else if (id == R.id.home_action_downloadchat) {
             //download messages ........................................................................................
             fileHelper = new FileHelper();
             if (fileHelper.emptyFile(con)) {
                 new Thread(new Runnable() {
                     public void run() {                                                     //THREAD 3............
                         // a potentially  time consuming task
-                        network = new Network(pullMsg, username, password, "dummy", "00.00", "00.00", "dummy", null,null,null,null);
+                        network = new Network(pullMsg, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
                         result = network.DoWork();
                         if (result != null) {
                             Log.e(TAG, "toast main thread=" + result);
@@ -970,11 +892,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     }
                 }).start();
                 Toast.makeText(con, "All Messages downloaded", Toast.LENGTH_SHORT).show();
-            }
-            else
+            } else
                 Toast.makeText(con, "You already have messages", Toast.LENGTH_SHORT).show();
-        }
-        else if (id == R.id.home_action_settings) {
+        } else if (id == R.id.home_action_settings) {
             return true;
         }
 
@@ -994,17 +914,20 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             // Handle the inbox........................................................................................
             //go to messages/contacts activity
             Intent i = new Intent(con, Inbox.class);
-            i.putExtra("sender","dummy");
-            i.putExtra("msg","dummy");
+            i.putExtra("sender", "dummy");
+            i.putExtra("msg", "dummy");
             con.startActivity(i);
 
         } else if (id == R.id.home_nav_sent) {
 
-        } else if (id == R.id.home_nav_tools) {
+        } else if (id == R.id.home_nav_reliabilties) {
+            // Handle the inbox........................................................................................
+            //go to Reliabilties activity
+            Intent i = new Intent(con, Reliabilities.class);
+            con.startActivity(i);
 
-        }
 
-        else if (id == R.id.home_nav_share) {
+        } else if (id == R.id.home_nav_share) {
 
         } else if (id == R.id.home_nav_feedback) {
 

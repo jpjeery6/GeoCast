@@ -4,20 +4,25 @@ package jeeryweb.geocast.FirebaseServices;
  * Created by Jeery on 22-02-2018.
  */
 
+import android.app.IntentService;
+import android.content.Intent;
 import android.util.Log;
 
 import com.google.firebase.iid.FirebaseInstanceId;
-import android.app.IntentService;
-import android.content.Intent;
 
+import jeeryweb.geocast.Activities.Home;
+import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class FirebaseRegistrationIntentService  extends  IntentService{
+
+    private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
 
 
 //Attributes**************************************************************
     //Objcets
      private SharedPrefHandler sharedPrefHandler;
+     private String token;
 
     // abbreviated tag name
     private final static String TAG = "FireRegIntentService";
@@ -41,10 +46,9 @@ public class FirebaseRegistrationIntentService  extends  IntentService{
 
         try {
             // request token that will be used by the server to send push notifications
-            String token = instanceID.getToken();
+            token = instanceID.getToken();
             Log.e(TAG, "FCM Registration Token: " + token);
-
-            sendRegistrationToServer(token);
+            sendRegistrationToServer();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,11 +58,18 @@ public class FirebaseRegistrationIntentService  extends  IntentService{
 
 
 //Method 3
-    private void sendRegistrationToServer(String token) {
-        Log.e(TAG+"tok",token);
-
-        //save the token in shared preferences
-        sharedPrefHandler=new SharedPrefHandler(this);
-        sharedPrefHandler.saveFcmToken(token);
+    private void sendRegistrationToServer() {
+        if (Home.username != null && Home.password != null & token != null) {
+            new Thread(new Runnable() {
+                public void run() {                                                 //THREAD 1.................
+                    // a potentially  time consuming task
+                    Network network = new Network(updateFcm, Home.username, Home.password, "dummy", "00.00", "00.00", token, null, null, null, null);
+                    String result = network.DoWork();
+                    if (result != null) {
+                        Log.e(TAG, " Fcm " + result);
+                    }
+                }
+            }).start();
+        }
     }
 }

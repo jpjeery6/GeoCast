@@ -9,6 +9,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled  true
     }
     dataBinding {
         enabled = true
@@ -42,6 +43,10 @@ dependencies {
     compile 'com.github.clans:fab:1.6.2'
     //for cardview in reliability activity
     implementation 'com.android.support:cardview-v7:26.1.0'
+    //library for slidind dots in the tabbed activity for reliabilities
+    compile 'me.relex:circleindicator:1.2.2@aar'
+
+
     //library for websocket real time connection with php server
     //compile "org.java-websocket:Java-WebSocket:1.3.0"
     //library for showing info window with summary and set reliable button

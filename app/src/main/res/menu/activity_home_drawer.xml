@@ -17,9 +17,9 @@
             android:icon="@drawable/ic_drafts_black_24px"
             android:title="Sent" />
         <item
-            android:id="@+id/home_nav_tools"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:id="@+id/home_nav_reliabilties"
+            android:icon="@drawable/ic_gender"
+            android:title="Reliabilities" />
     </group>
 
     <item android:title="Communicate">

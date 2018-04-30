@@ -1,23 +1,18 @@
 package jeeryweb.geocast.Activities;
 
 import android.Manifest;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
-
 import android.app.ProgressDialog;
 import android.content.Context;
-
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -30,8 +25,8 @@ import android.widget.Toast;
 
 import java.util.HashMap;
 
-import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class Login extends AppCompatActivity {
@@ -84,6 +79,8 @@ public class Login extends AppCompatActivity {
 
 
         if (session.isLoggedIn()) {
+
+//IF USER IS LOGGED IN IN THE SHARED PREFERENCES GOT TO HOME ACTIVITY DIRECTLY
             Intent i = new Intent(c, Home.class);
 
             Bundle bundle = new Bundle();
@@ -98,6 +95,7 @@ public class Login extends AppCompatActivity {
             startActivity(i);
             finish();
         } else {
+//IF NOT CHECK IF USER HAS LOGGED IN EARLIER FROM THIS DEVICE
             //check if there is a shared preference entry if yes load it
             //Retrieving username and password
             HashMap<String, String> userMap = session.getUserDetails();

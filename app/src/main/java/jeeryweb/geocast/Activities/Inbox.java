@@ -1,24 +1,22 @@
 package jeeryweb.geocast.Activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.util.Log;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -37,8 +35,8 @@ import jeeryweb.geocast.databinding.ActivityInboxBinding;
 public class Inbox extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    String filename = "GeoCastInbox";
     public boolean isInFront;
+    String filename = "GeoCastInbox";
     Context con;
     ActivityInboxBinding activityInboxBinding;
     InboxListviewAdapter inboxListviewAdapter;
@@ -73,8 +71,8 @@ public class Inbox extends AppCompatActivity
 
 
         //getting navbar header items- image , name ,welcome
-        View inboxNavHeader=navigationView.getHeaderView(0);
-        LinearLayout navHeaderLayout= (LinearLayout)inboxNavHeader.findViewById(R.id.inbox_nav_layout);
+        View inboxNavHeader = navigationView.getHeaderView(0);
+        LinearLayout navHeaderLayout = (LinearLayout) inboxNavHeader.findViewById(R.id.inbox_nav_layout);
         //setting listner on nav header layout to go to MyProfile Activity
         navHeaderLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,7 +89,7 @@ public class Inbox extends AppCompatActivity
 
         //getting widgets
         recordsList = (ListView) findViewById(R.id.chatList);
-        con=this;
+        con = this;
 
         inboxListviewAdapter = new InboxListviewAdapter();
 
@@ -111,8 +109,8 @@ public class Inbox extends AppCompatActivity
                 while ((receiveString = bufferedReader.readLine()) != null) {
                     //here i am getting each line
                     //scan each message and separate the parts in the message
-                    Log.e("lines = ",receiveString);
-                    if(receiveString.contains("%")) {
+                    Log.e("lines = ", receiveString);
+                    if (receiveString.contains("%")) {
                         separated = receiveString.split("%");
 
                         // if sender is same create only one entry in listview
@@ -130,7 +128,7 @@ public class Inbox extends AppCompatActivity
 
         //now send the list to populate the listview
         Collections.reverse(rows);
-        inboxListviewAdapter.recordsInListview(this,recordsList, this, rows);
+        inboxListviewAdapter.recordsInListview(this, recordsList, this, rows);
     }
 
     @Override
