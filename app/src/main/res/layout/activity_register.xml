@@ -27,7 +27,7 @@
                 android:layout_marginTop="52dp"
                 android:layout_height="35dp"
                 android:layout_width="35dp"
-                android:src="@drawable/ic_clear_black"
+                android:src="@drawable/ic_add_black"
                 android:id="@+id/activity_register_ppselectImage"
                 android:layout_alignRight="@+id/activity_register_pp_imageView"
                 />

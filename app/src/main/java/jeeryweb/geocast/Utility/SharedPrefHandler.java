@@ -33,8 +33,12 @@ public class SharedPrefHandler {
     public static final String KEY_PASS = "pass";
     //Fcm token
     public static final String FCM_TOKEN = "FCMToken";
-
+    //Pushy token
+    public static final String PUSHY_TOKEN = "PushyToken";
+    //Imei
     public static final String IMEI = "IMEI";
+
+    //Bio * change it .. dont save it in shared pref
     public static final String OCCUPATION = "Occupation";
     public static final String AGE  = "Age";
     public static final String GENDER = "Gender";
@@ -68,11 +72,21 @@ public class SharedPrefHandler {
         editor.commit();
     }
 
+    public void savePushyToken(String pushyToken)
+    {
+        editor.putString(PUSHY_TOKEN, pushyToken);
+        editor.commit();
+    }
+
     public String getFcmToken()
     {
         return pref.getString(FCM_TOKEN, null);
     }
 
+    public String getPushyToken()
+    {
+        return pref.getString(PUSHY_TOKEN, null);
+    }
     // Get Login State
     public boolean isLoggedIn(){
 

@@ -45,8 +45,8 @@ public class Login extends AppCompatActivity {
 
     //widgets
     EditText user, pass;
-    Button login, migrate;
-    TextView registerLink;
+    Button login;
+    TextView registerLink,migrate;
     ProgressDialog progressDialog;
 
     public String us = null, pa = null, result, imeinumber;
@@ -75,7 +75,7 @@ public class Login extends AppCompatActivity {
         pass = (EditText) findViewById(R.id.activity_login_pass);
         login = (Button) findViewById(R.id.activity_login_loginbtn);
         registerLink = (TextView) findViewById(R.id.activity_login_link_signup);
-        migrate = (Button) findViewById(R.id.activity_login_migartebtn);
+        migrate = (TextView) findViewById(R.id.activity_login_migartebtn);
 
 
         if (session.isLoggedIn()) {
@@ -169,10 +169,12 @@ public class Login extends AppCompatActivity {
     }
 
 
-    private boolean runtime_permissions() {
-        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
 
-            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION,android.Manifest.permission.READ_PHONE_STATE}, 100);
+    //added two extra permissions for pushy**********************************************
+    private boolean runtime_permissions() {
+        if (Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
 
             return true;
         }
@@ -184,7 +186,7 @@ public class Login extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED && grantResults[3] == PackageManager.PERMISSION_GRANTED && grantResults[4] == PackageManager.PERMISSION_GRANTED) {
                 //do nothing
             } else {
                 runtime_permissions();

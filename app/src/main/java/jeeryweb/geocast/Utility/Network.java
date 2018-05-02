@@ -27,7 +27,7 @@ public class Network {
 
     private String user,pass=null;
     private String msg=null;
-    private String latt,longi,fcmToken;
+    private String latt,longi,fcmToken,pushyToken;
     private String IMEI = null,bio=null;
     private String postData;
     private String phone;
@@ -36,7 +36,7 @@ public class Network {
     private final String TAG=getClass().getSimpleName();
 
 
-    public Network(String addr, String user, String pass, String msg, String latt, String longi,String fcmToken, String IMEI, String bio, String phone,String image){
+    public Network(String addr, String user, String pass, String msg, String latt, String longi,String pushyToken, String IMEI, String bio, String phone,String image){
         String f = "NA";
 
         this.addr = addr;
@@ -45,7 +45,8 @@ public class Network {
         this.msg = msg!=null?msg:f;
         this.latt = latt!=null?latt:f;
         this.longi = longi!=null?longi:f;
-        this.fcmToken=  fcmToken!=null?fcmToken:f;
+        this.pushyToken=  pushyToken!=null?pushyToken:f;
+      //  this.fcmToken=  pushyToken!=null?pushyToken:f;
         this.IMEI = IMEI!=null?IMEI:f;
         this.bio = bio!=null?bio:f;
         this.phone = phone!=null?phone:f;
@@ -86,6 +87,8 @@ public class Network {
                 Log.e(TAG +" null= ","msg is null");
             if(fcmToken==null)
                 Log.e(TAG +" null= ","fcmToken is null");
+            if(pushyToken==null)
+                Log.e(TAG +" null= ","pushyToken is null");
             if(IMEI==null)
                 Log.e(TAG +" null= ","IMEI is null");
             if(phone==null)
@@ -100,7 +103,7 @@ public class Network {
                     "&" + URLEncoder.encode("Username", "UTF-8") + "=" + URLEncoder.encode(user, "UTF-8") +
                     "&" + URLEncoder.encode("Password", "UTF-8") + "=" + URLEncoder.encode(pass, "UTF-8") +
                     "&" + URLEncoder.encode("Message", "UTF-8") + "=" + URLEncoder.encode(msg, "UTF-8") +
-                    "&" + URLEncoder.encode("FCMtoken", "UTF-8") + "=" + URLEncoder.encode(fcmToken, "UTF-8")+
+                    "&" + URLEncoder.encode("PushyToken", "UTF-8") + "=" + URLEncoder.encode(pushyToken, "UTF-8")+
                     "&" + URLEncoder.encode("Bio", "UTF-8") + "=" + URLEncoder.encode(bio, "UTF-8")+
                     "&" + URLEncoder.encode("IMEI", "UTF-8") + "=" + URLEncoder.encode(IMEI, "UTF-8")+
                     "&" + URLEncoder.encode("Phone", "UTF-8") + "=" + URLEncoder.encode(phone, "UTF-8")+

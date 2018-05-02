@@ -9,7 +9,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        multiDexEnabled  true
+        multiDexEnabled true
     }
     dataBinding {
         enabled = true
@@ -31,21 +31,22 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:0.5'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
 
-    compile 'com.google.firebase:firebase-core:11.8.0'
-    compile 'com.google.firebase:firebase-messaging:11.8.0'
+    implementation 'com.google.firebase:firebase-core:11.8.0'
+    implementation 'com.google.firebase:firebase-messaging:11.8.0'
 
-    compile 'com.google.android.gms:play-services-maps:11.8.0'
-    compile 'com.google.android.gms:play-services:11.8.0'
+    implementation 'com.google.android.gms:play-services-maps:11.8.0'
+    implementation 'com.google.android.gms:play-services:11.8.0'
 
     //simple small library for circular image in contacts listview
-    compile 'de.hdodenhof:circleimageview:1.2.1'
+    implementation 'de.hdodenhof:circleimageview:1.2.1'
     //library for floating action button behaivour
-    compile 'com.github.clans:fab:1.6.2'
+    implementation 'com.github.clans:fab:1.6.2'
     //for cardview in reliability activity
     implementation 'com.android.support:cardview-v7:26.1.0'
     //library for slidind dots in the tabbed activity for reliabilities
-    compile 'me.relex:circleindicator:1.2.2@aar'
-
+    implementation 'me.relex:circleindicator:1.2.2@aar'
+    //30/04/2018 shifting from firebase to pushy
+    implementation 'me.pushy:sdk:1.0.32'
 
     //library for websocket real time connection with php server
     //compile "org.java-websocket:Java-WebSocket:1.3.0"

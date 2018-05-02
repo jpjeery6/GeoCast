@@ -63,11 +63,13 @@ import java.util.HashMap;
 import java.util.List;
 
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
+import jeeryweb.geocast.PushyServices.PushyToken;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Services.LocationUpdaterService;
 import jeeryweb.geocast.Utility.FileHelper;
 import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
+import me.pushy.sdk.Pushy;
 
 /**
  * This class 1.sends the FCM token to the server if running --for the first time-- in a separate thread
@@ -88,10 +90,11 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     //TAG for Logging
     private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
     private final String nearbyusers = "https://jeeryweb.000webhostapp.com/ProjectLoc/getUserLocationsRealTime.php";
-    private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsg.php";
+    private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsgUsingPushy.php";
     private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
     private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
     private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
+
     //Variables
     private final String TAG = getClass().getSimpleName();
     public boolean internet = true;
@@ -100,6 +103,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     //user defined class objects
     SharedPrefHandler sharedPrefHandler;
     Network network;
+    PushyToken pushyTokenObj;
     FileHelper fileHelper;
     NavigationView navigationView;
     Context con;
@@ -109,7 +113,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     List<Marker> nearbyMarkers;
     List<LatLng> nearbyLatlang;
     List<String> nearbyUsername;
-    String fcmToken;
+    String fcmToken,pushyToken;
     String msg, result;
     //widgets
     View mapView;
@@ -117,7 +121,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
     //Objects
     private BroadcastReceiver receiver;
-    //globally required for location purpose
+    // required for location purpose
     private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
@@ -167,6 +171,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Pushy.listen(this);
         setContentView(R.layout.activity_home);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -206,49 +211,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         sendMessageFab = (FloatingActionMenu) findViewById(R.id.sendmsg_floating_menu);
         emergencyMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.emergencymsgfab);
         customMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.custommsgfab);
-
-
-        emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (internet) {
-                    //TODO something when floating action menu first item clicked
-                    //send in built message directly
-                    msg = "Please help me please";
-
-                    //do this on a new thread
-                    new Thread(new Runnable() {
-                        public void run() {                                                 //THREAD 4.............
-                            // a potentially  time consuming task
-                            if (locationObj != null) {
-                                network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
-                                result = network.DoWork();
-                                if (result != null && result.contains("sent")) {
-                                    //Log.e(TAG, "send message main thread" + result);
-                                    //pass this result to UI thread by writing a message to the UI's handler
-                                    Message m = Message.obtain();
-                                    Bundle bundle = new Bundle();
-                                    bundle.putString("result", result);
-                                    m.setData(bundle);
-                                    handler.sendMessage(m);
-                                }
-                            }
-                        }
-                    }).start();
-                    sendMessageFab.close(true);
-                }
-            }
-        });
-        customMsgFab.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (internet) {
-                    //TODO something when floating action menu second item clicked
-                    MessageInputDialog messageInputDialog = new MessageInputDialog();
-                    messageInputDialog.passFloatMenu(sendMessageFab);
-                    messageInputDialog.show(getFragmentManager(), "customMsg");
-                }
-            }
-        });
-        sendMessageFab.setClosedOnTouchOutside(true);
 
 
         //navigation bar
@@ -295,24 +257,18 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 //here we should have taken the firebase token but it is generated earlier only
                 Log.e("googlePlayServices", "yes");
             }
-            fcmToken = sharedPrefHandler.getFcmToken();
-            if (username != null && password != null & fcmToken != null) {
-                new Thread(new Runnable() {
-                    public void run() {                                                 //THREAD 1.................
-                        // a potentially  time consuming task
-                        network = new Network(updateFcm, username, password, "dummy", "00.00", "00.00", fcmToken, null, null, null, null);
-                        result = network.DoWork();
-                        if (result != null) {
-                            Log.e(TAG, " Fcm " + result);
-                        }
-                    }
-                }).start();
-            }
+            pushyTokenObj = new PushyToken();
+            pushyTokenObj.getPushyDeviceToken(this);
+            if(pushyToken == null)
+                Log.e("Home ","pushyToken null");
+            else
+                sharedPrefHandler.savePushyToken(pushyToken);
+
         } else {
             Log.e(TAG, "first time no");
-            fcmToken = sharedPrefHandler.getFcmToken();
+            pushyToken = sharedPrefHandler.getPushyToken();
             //even if it is not the first time upload the fcm token in case it has changed
-            Log.e(TAG + " retrieved token:", fcmToken);
+            Log.e(TAG + " retrieved token:", pushyToken);
         }
 
 
@@ -334,6 +290,49 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //setting listeners on buttons.............................................................................
 
+
+
+        emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (internet) {
+                    //TODO something when floating action menu first item clicked
+                    //send in built message directly
+                    msg = "Please help me please";
+
+                    //do this on a new thread
+                    new Thread(new Runnable() {
+                        public void run() {                                                 //THREAD 4.............
+                            // a potentially  time consuming task
+                            if (locationObj != null) {
+                                network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
+                                result = network.DoWork();
+                                if (result != null && result.contains("sent")) {
+                                    //Log.e(TAG, "send message main thread" + result);
+                                    //pass this result to UI thread by writing a message to the UI's handler
+                                    Message m = Message.obtain();
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("result", result);
+                                    m.setData(bundle);
+                                    handler.sendMessage(m);
+                                }
+                            }
+                        }
+                    }).start();
+                    sendMessageFab.close(true);
+                }
+            }
+        });
+        customMsgFab.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (internet) {
+                    //TODO something when floating action menu second item clicked
+                    MessageInputDialog messageInputDialog = new MessageInputDialog();
+                    messageInputDialog.passFloatMenu(sendMessageFab);
+                    messageInputDialog.show(getFragmentManager(), "customMsg");
+                }
+            }
+        });
+        sendMessageFab.setClosedOnTouchOutside(true);
         //setting listner on nav header layout to go to MyProfile Activity
         navHeaderLayout.setOnClickListener(new View.OnClickListener() {
             @Override
