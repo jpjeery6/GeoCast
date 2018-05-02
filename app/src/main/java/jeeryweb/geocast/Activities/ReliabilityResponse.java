@@ -15,7 +15,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +24,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
@@ -33,8 +33,8 @@ public class ReliabilityResponse extends AppCompatActivity {
 
     private static Handler handler;
     //TAG for Logging
-    private final String getPPSummary = "https://jeeryweb.000webhostapp.com/ProjectLoc/getSummary.php";
-    private final String sendreliableresconf = "https://jeeryweb.000webhostapp.com/ProjectLoc/acceptDenyReliability.php";
+//    private final String getPPSummary = "https://jeeryweb.000webhostapp.com/ProjectLoc/getSummary.php";
+//    private final String sendreliableresconf = "https://jeeryweb.000webhostapp.com/ProjectLoc/acceptDenyReliability.php";
     private String username, phoneno;
     private TextView User, summary;
     private EditText phno;
@@ -43,6 +43,7 @@ public class ReliabilityResponse extends AppCompatActivity {
     private ProgressBar loadingSummaryprogressBar;
     private CircleImageView pp;
     private SharedPrefHandler sharedPrefHandler;
+    APIEndPoint apiEndPoint;
     private Network network;
     private String result;
     //private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsg.php";
@@ -84,7 +85,7 @@ public class ReliabilityResponse extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {                                                 //THREAD 4.............
                 // a potentially  time consuming task
-                network = new Network(getPPSummary, username, "kkk", "kkk", "kk", "kk", "ksdhfj", null, null, null, null);
+                network = new Network(apiEndPoint.getPPSummary, username, "kkk", "kkk", "kk", "kk", "ksdhfj", null, null, null, null);
                 result = network.DoWork();
                 if (result != null) {
                     Log.e("get PP abd summary", result);
@@ -170,7 +171,7 @@ public class ReliabilityResponse extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {                                                 //THREAD 4.............
                 // a potentially  time consuming task
-                network = new Network(sendreliableresconf, Home.username, username, msgres, "kk", "kk", "ksdhfj", null, null, phoneno, null);
+                network = new Network(apiEndPoint.sendreliableresconf, Home.username, username, msgres, "kk", "kk", "ksdhfj", null, null, phoneno, null);
                 result = network.DoWork();
                 if (result != null) {
                     Log.e("send reliability res", result);

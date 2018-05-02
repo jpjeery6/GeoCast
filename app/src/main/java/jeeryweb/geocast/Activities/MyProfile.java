@@ -1,21 +1,16 @@
 package jeeryweb.geocast.Activities;
 
-import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
-import android.provider.ContactsContract;
-import android.provider.MediaStore;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
@@ -31,17 +26,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.PPUpload;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
-
-import static jeeryweb.geocast.Activities.Home.username;
 
 public class MyProfile extends AppCompatActivity {
 
@@ -53,9 +46,10 @@ public class MyProfile extends AppCompatActivity {
     private ProgressDialog progressDialogUplaod;
     private String usernameName;
 
+    APIEndPoint apiEndPoint;
     Context c;
 
-    private final String url_uplaod = "https://jeeryweb.000webhostapp.com/ProjectLoc/saveProPic.php";
+//    private final String url_uplaod = "https://jeeryweb.000webhostapp.com/ProjectLoc/saveProPic.php";
     private String pathPP;
     private Bitmap bitmapPP;
     private  SharedPrefHandler sharedPrefHandler;
@@ -173,7 +167,7 @@ public class MyProfile extends AppCompatActivity {
                 //convert this HashMap to encodedUrl to send to php file
                 String dataToSend = hashMapToUrl(detail);
                 //make a Http request and send data to saveImage.php file
-                String response = PPUpload.post(url_uplaod,dataToSend);
+                String response = PPUpload.post(apiEndPoint.url_uplaod,dataToSend);
 
                 //return the response
                 return response;

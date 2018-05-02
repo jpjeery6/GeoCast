@@ -11,10 +11,9 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.security.Provider;
 import java.util.HashMap;
 
-import jeeryweb.geocast.Activities.Home;
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
@@ -24,10 +23,11 @@ import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class LocationUpdaterService extends Service {
     private final String TAG=getClass().getSimpleName();
-    private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
+//    private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
 
     private LocationManager mLocationManager = null;
     Network network;
+    APIEndPoint apiEndPoint;
     SharedPrefHandler sharedPrefHandler;
     private Intent resultIntent;
     private PendingIntent mPendingIntent;
@@ -59,7 +59,7 @@ public class LocationUpdaterService extends Service {
             new Thread(new Runnable() {
                 public void run() {
                     // a potentially  time consuming task
-                    network =new Network(updateLoc,user,pass,msg,latt,longi,"jdnksj",null,null,null,null);
+                    network =new Network(apiEndPoint.updateLoc,user,pass,msg,latt,longi,"jdnksj",null,null,null,null);
                     result=network.DoWork();
                     if(result!=null)
                     {

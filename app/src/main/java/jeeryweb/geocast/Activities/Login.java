@@ -25,7 +25,9 @@ import android.widget.Toast;
 
 import java.util.HashMap;
 
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.ImeiExtractor;
 import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
@@ -34,14 +36,16 @@ public class Login extends AppCompatActivity {
 //Attributes****************************************************************************************
 
     //Objects
+    APIEndPoint apiEndPoint;
     Network network;
     SharedPrefHandler session;
+    ImeiExtractor imeiExtractor;
     Context c;
     Handler handler;
 
     private final String TAG = getClass().getSimpleName() + " LoginActivity";
-    private final String lgIn = "https://jeeryweb.000webhostapp.com/ProjectLoc/login.php";
-    private final String migL = "https://jeeryweb.000webhostapp.com/ProjectLoc/migrate.php";
+//    private final String lgIn = "https://jeeryweb.000webhostapp.com/ProjectLoc/login.php";
+//    private final String migL = "https://jeeryweb.000webhostapp.com/ProjectLoc/migrate.php";
 
     //widgets
     EditText user, pass;
@@ -68,6 +72,7 @@ public class Login extends AppCompatActivity {
 
         //creating sessions, loginregister objects and context
         session = new SharedPrefHandler(this);
+        imeiExtractor = new ImeiExtractor(this);
         c = this;
 
         //setting up widgets
@@ -201,12 +206,12 @@ public class Login extends AppCompatActivity {
             return;
         }
         //valid input is recieved
-        try {
+        if(session.getIMEI()==null)
+            imeinumber = imeiExtractor.getPhoneIEMINumber();
+        else
             imeinumber = session.getIMEI();
-        } catch (Exception e) {
-            imeinumber = null;
-        }
 
+        Log.e(TAG, "imeinumber is "+imeinumber);
         progressDialog = new ProgressDialog(Login.this);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Authenticating");
@@ -219,7 +224,7 @@ public class Login extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {
                 // a potentially  time consuming task
-                network = new Network(lgIn, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", imeinumber, null, null, null);
+                network = new Network(apiEndPoint.lgIn, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", imeinumber, null, null, null);
                 result = network.DoWork();
 
                 if (result != null) {
@@ -274,12 +279,12 @@ public class Login extends AppCompatActivity {
         progressDialog.show();
 
         //this will set New_imei
-        final String new_imei = getPhoneIEMINumber();
+        final String new_imei = imeiExtractor.getPhoneIEMINumber();
 
         new Thread(new Runnable() {
             public void run() {
                 // a potentially  time consuming task
-                network = new Network(migL, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", new_imei, null, null, null);
+                network = new Network(apiEndPoint.migL, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", new_imei, null, null, null);
                 result = network.DoWork();
 
 
