@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
 import jeeryweb.geocast.PushyServices.PushyToken;
 import jeeryweb.geocast.R;
@@ -88,12 +89,12 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     public static String username, password;
     private static Handler handler;
     //TAG for Logging
-    private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
-    private final String nearbyusers = "https://jeeryweb.000webhostapp.com/ProjectLoc/getUserLocationsRealTime.php";
-    private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsgUsingPushy.php";
-    private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
-    private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
-    private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
+//    private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
+//    private final String nearbyusers = "https://jeeryweb.000webhostapp.com/ProjectLoc/getUserLocationsRealTime.php";
+//    private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsgUsingPushy.php";
+//    private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
+//    private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
+//    private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
 
     //Variables
     private final String TAG = getClass().getSimpleName();
@@ -101,6 +102,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     //to check if my activity is the current activity
     public boolean isInFront;
     //user defined class objects
+    APIEndPoint apiEndPoint;
     SharedPrefHandler sharedPrefHandler;
     Network network;
     PushyToken pushyTokenObj;
@@ -304,7 +306,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                         public void run() {                                                 //THREAD 4.............
                             // a potentially  time consuming task
                             if (locationObj != null) {
-                                network = new Network(sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
+                                network = new Network(apiEndPoint.sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
                                 result = network.DoWork();
                                 if (result != null && result.contains("sent")) {
                                     //Log.e(TAG, "send message main thread" + result);
@@ -523,7 +525,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             public void run() {
                 // a potentially  time consuming task
                 if (locationObj != null) {
-                    network = new Network(nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
+                    network = new Network(apiEndPoint.nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
                     result = network.DoWork();
                     if (result != null && result.contains("nearby")) {
                         Log.e("getreal time locs", "recieved locations");
@@ -845,7 +847,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                             new Thread(new Runnable() {
                                 public void run() {                                                     //THREAD 3............
                                     // a potentially  time consuming task
-                                    network = new Network(lgot, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
+                                    network = new Network(apiEndPoint.lgot, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
                                     result = network.DoWork();
                                     if (result != null) {
                                         Log.e(TAG, "toast main thread" + result);
@@ -878,7 +880,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 new Thread(new Runnable() {
                     public void run() {                                                     //THREAD 3............
                         // a potentially  time consuming task
-                        network = new Network(pullMsg, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
+                        network = new Network(apiEndPoint.pullMsg, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
                         result = network.DoWork();
                         if (result != null) {
                             Log.e(TAG, "toast main thread=" + result);

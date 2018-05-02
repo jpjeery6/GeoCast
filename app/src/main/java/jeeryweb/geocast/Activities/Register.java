@@ -1,26 +1,17 @@
 package jeeryweb.geocast.Activities;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -41,9 +32,10 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import jeeryweb.geocast.Utility.Network;
-
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.ImeiExtractor;
+import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.PPUpload;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
@@ -52,12 +44,14 @@ public class Register extends AppCompatActivity {
 
 //Attributes*************************************************************
 
-    private final String reg ="https://jeeryweb.000webhostapp.com/ProjectLoc/register.php";
-    private final String url_uplaod = "https://jeeryweb.000webhostapp.com/ProjectLoc/saveProPic.php";
+//    private final String reg ="https://jeeryweb.000webhostapp.com/ProjectLoc/register.php";
+//    private final String url_uplaod = "https://jeeryweb.000webhostapp.com/ProjectLoc/saveProPic.php";
     private final String TAG=getClass().getSimpleName()+" LoginActivity";
 
     //objects
+    APIEndPoint apiEndPoint;
     Network network;
+    ImeiExtractor imeiExtractor;
     Context c;
     SharedPrefHandler session;
     Handler handler;
@@ -93,6 +87,7 @@ public class Register extends AppCompatActivity {
         }
 
         session = new SharedPrefHandler(this);
+        imeiExtractor = new ImeiExtractor(this);
         c = this;
 
         //setting up widgets
@@ -115,7 +110,8 @@ public class Register extends AppCompatActivity {
         //ask for permissions
         //getImei_askForPermission(Manifest.permission.READ_PHONE_STATE, 0x1);
 
-        imeiNumber = getPhoneIEMINumber();
+        //get imei number and save in shared preference
+        imeiNumber = imeiExtractor.getPhoneIEMINumber();
         iemiNumberSlot.setText(imeiNumber);
         session.saveIMEI(imeiNumber);
 
@@ -196,7 +192,6 @@ public class Register extends AppCompatActivity {
 
         int selectedId = bioGender.getCheckedRadioButtonId();
         RadioButton bioGendervalue = (RadioButton) findViewById(selectedId);
-        String phnonull;
 
 
         bio = bioAge.getText().toString() + '|' + bioOccupation.getText().toString() + '|' + bioGendervalue.getText().toString();
@@ -204,8 +199,6 @@ public class Register extends AppCompatActivity {
         fcmtoken = session.getFcmToken();
         phonevalue = phone.getText().toString();
 
-        if(phonevalue==null)
-            phnonull="NA";
         //save all info to show on profile page
         session.saveBio(bioOccupation.getText().toString(),bioGendervalue.getText().toString(),bioAge.getText().toString(),phonevalue);
 
@@ -214,7 +207,7 @@ public class Register extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {
                 // a potentially  time consuming task
-                network =new Network(reg,uss,pas,"dummymsg","00.00","00.00",fcmtoken, imeiNumber, bio, phonevalue, picname);
+                network =new Network(apiEndPoint.reg,uss,pas,"dummymsg","00.00","00.00",fcmtoken, imeiNumber, bio, phonevalue, picname);
                 result=network.DoWork();
                 Log.e("result",result);
                 progressDialog.dismiss();
@@ -232,61 +225,6 @@ public class Register extends AppCompatActivity {
 
     }
 
-    private void getImei_askForPermission(String permission, Integer requestCode) {
-        if (ContextCompat.checkSelfPermission(Register.this, permission) != PackageManager.PERMISSION_GRANTED) {
-
-            // Should show an explanation
-            if (ActivityCompat.shouldShowRequestPermissionRationale(Register.this, permission)) {
-
-                ActivityCompat.requestPermissions(Register.this, new String[]{permission}, requestCode);
-
-            } else {
-
-                ActivityCompat.requestPermissions(Register.this, new String[]{permission}, requestCode);
-            }
-        } else {
-            imeiNumber = getPhoneIEMINumber();
-        }
-    }
-
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-    {
-        switch (requestCode) {
-            case 1: {
-
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    imeiNumber = getPhoneIEMINumber();
-                    iemiNumberSlot.setText(imeiNumber);
-
-                } else {
-
-                    Toast.makeText(Register.this, "You have Denied the Permission", Toast.LENGTH_SHORT).show();
-                    imeiNumber = "permission denied";
-
-                }
-                return;
-            }
-        }
-    }
-
-    public String getPhoneIEMINumber() {
-        TelephonyManager telephonyManager = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//
-//            return telephonyManager.getImei();
-//        }
-//        else {
-//            return telephonyManager.getDeviceId();
-//        }
-        return telephonyManager.getDeviceId();
-    }
-
     public boolean validate() {
         boolean valid = true;
 
@@ -295,10 +233,8 @@ public class Register extends AppCompatActivity {
         String passwordre= regpass2.getText().toString();
         String p = phone.getText().toString();
 
-        if(imeiNumber=="permission denied"){
-            Toast.makeText(Register.this, "Please grant permission", Toast.LENGTH_SHORT).show();
-            getImei_askForPermission(Manifest.permission.READ_PHONE_STATE, 0x1);
-            return false;
+        if(imeiNumber ==null){
+            imeiNumber = imeiExtractor.getPhoneIEMINumber();
         }
 
         if (email.isEmpty() || email.length() < 4 || email.length() > 20) {
@@ -392,7 +328,7 @@ public class Register extends AppCompatActivity {
                 //convert this HashMap to encodedUrl to send to php file
                 String dataToSend = hashMapToUrl(detail);
                 //make a Http request and send data to saveImage.php file
-                String response = PPUpload.post(url_uplaod,dataToSend);
+                String response = PPUpload.post(apiEndPoint.url_uplaod,dataToSend);
 
                 //return the response
                 return response;

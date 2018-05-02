@@ -6,16 +6,18 @@ import android.util.Log;
 import android.widget.Toast;
 
 import jeeryweb.geocast.Activities.Home;
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 import me.pushy.sdk.Pushy;
 
 public class PushyToken {
 
-    private final String updatePushy = "https://jeeryweb.000webhostapp.com/ProjectLoc/updatePushy.php";
+//    private final String updatePushy = "https://jeeryweb.000webhostapp.com/ProjectLoc/updatePushy.php";
 
     private String TAG = "PushyTokenClass";
     private SharedPrefHandler sharedPrefHandler;
+    APIEndPoint apiEndPoint;
     private String pushyToken;
     private Context context;
     private Network network;
@@ -70,7 +72,7 @@ public class PushyToken {
                     public void run() {                                                 //THREAD 1.................
                         // a potentially  time consuming task
                         Log.e("new thread", "starting upload of Pushy token to app server");
-                        network = new Network(updatePushy, Home.username, Home.password, "dummy", "00.00", "00.00", pushyToken, null, null, null, null);
+                        network = new Network(apiEndPoint.updatePushy, Home.username, Home.password, "dummy", "00.00", "00.00", pushyToken, null, null, null, null);
                         result = network.DoWork();
                         if (result != null) {
                             Log.e(TAG, " Pushy " + result);
