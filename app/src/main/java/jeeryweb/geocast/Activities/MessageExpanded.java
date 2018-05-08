@@ -39,7 +39,7 @@ public class MessageExpanded extends AppCompatActivity {
         con = this;
         //widgets
         messageBodyView = (TextView)findViewById(R.id.Message_messageBody);
-       // messageSenderView  = (TextView)findViewById(R.id.Message_messageSender);
+        // messageSenderView  = (TextView)findViewById(R.id.Message_messageSender);
         messageTimeView  = (TextView)findViewById(R.id.Message_messageTime);
         cardViewHelp = (CardView) findViewById(R.id.cardViewHelp);
         ackYesView = (Button) findViewById(R.id.Message_AckYes);
