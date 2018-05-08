@@ -138,6 +138,7 @@ public class ReliabilityRequest extends AppCompatActivity {
                     //get the firebase token of the user
                     //send a req to firebase server to push a message
                     //do this on a new thread
+                    Log.e("reliability req", "sending to network");
                     new Thread(new Runnable() {
                         public void run() {                                                 //THREAD 4.............
                             // a potentially  time consuming task

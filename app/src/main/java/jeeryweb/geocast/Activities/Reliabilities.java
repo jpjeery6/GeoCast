@@ -1,6 +1,9 @@
 package jeeryweb.geocast.Activities;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -9,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,7 +24,14 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jeeryweb.geocast.Adapters.ReliabilitiesListviewAdapter;
+import jeeryweb.geocast.Constants.APIEndPoint;
+import jeeryweb.geocast.Models.ReliabilitiesRowRecord;
 import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.Network;
 
 public class Reliabilities extends AppCompatActivity {
 
@@ -38,12 +49,23 @@ public class Reliabilities extends AppCompatActivity {
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    static View rootView;
+    static int ARG_SECTION_NO;
+    static ProgressBar loadingRel;
+    static ListView recordsList;
+    private static Network network;
+    private static Handler handler;
+    private static APIEndPoint apiEndPoint;
+    private static ReliabilitiesListviewAdapter reliabilitiesListviewAdapter;
+    private static List<ReliabilitiesRowRecord> rowsRel = new ArrayList<>();
+    private static List<ReliabilitiesRowRecord> rowsPRel = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reliabilities);
 
+        Log.e("Reliabilties","On Create");
 
         Window window = this.getWindow();
         // clear FLAG_TRANSLUCENT_STATUS flag:
@@ -52,10 +74,6 @@ public class Reliabilities extends AppCompatActivity {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         // finally change the color
         window.setStatusBarColor(ContextCompat.getColor(this,R.color.colorPrimaryDark));
-
-
-
-
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.activity_reliabilities_toolbar);
@@ -72,9 +90,72 @@ public class Reliabilities extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager, true);
 
 
+        new Thread(new Runnable() {
+            public void run() {
+                Log.e("Reliabilties","in new threaed");
+                network = new Network(APIEndPoint.getReliabilities, Home.username, Home.password, "bhbh", null, null, "ksdhfj", null, null, null, null);
+                String result = network.DoWork();
+                if (result != null) {
+                    //Log.e(TAG, "send message main thread" + result);
+                    //pass this result to UI thread by writing a message to the UI's handler
+                    //we have to parse the result into two arrays rowsRel and rowsPRel
+                    Message m = Message.obtain();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("resultRelReq", result);
+                    m.setData(bundle);
+                    handler.sendMessage(m);
+                }
+            }
+        }).start();
+
+
+        //getting to main ui Thread*********************
+        handler = new Handler(Looper.getMainLooper()) {
+            Object relReqs, pRelReqs;
+
+            @Override
+            public void handleMessage(Message msg) {
+
+                relReqs = msg.getData().get("resultRelReq");
+
+                if (relReqs != null) {
+                    //Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
+                    Log.e("Reliabilties","got result from network");
+                    String resultList = relReqs.toString();
+                    String[] listArray = resultList.split("%");
+                    Log.e("listArray size","= "+String.valueOf(listArray.length));
+                    for(int i= 1 ;i<listArray.length-1;i=i+2)
+                    {
+                        //if(Integer.parseInt(listArray[i+1]) == 0)
+                            rowsRel.add(new ReliabilitiesRowRecord(listArray[i],"abc" , "abc"));
+                        //else
+                            rowsPRel.add(new ReliabilitiesRowRecord(listArray[i],"abc" , "abc"));
+                        Log.e("listArray["+ i + "] = ",listArray[i]);
+                    }
+                    updateUI();
+
+                }
+
+            }
+
+        };
+
+
+
     }
 
-
+    private void updateUI() {
+        if (loadingRel != null && recordsList != null && reliabilitiesListviewAdapter != null) {
+            loadingRel.setVisibility(View.INVISIBLE);
+            if (ARG_SECTION_NO == 1) {
+                Log.e("Arg section 1","yes");
+                reliabilitiesListviewAdapter.recordsInListview(this, recordsList, this, rowsRel);
+            }
+            else{
+                Log.e("Arg section 2","yes");
+                reliabilitiesListviewAdapter.recordsInListview(this, recordsList, this, rowsPRel);
+        }}
+    }
 
 
 
@@ -134,18 +215,39 @@ public class Reliabilities extends AppCompatActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_reliabilities, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
-            ListView listView= (ListView)rootView.findViewById(R.id.reliabilitylist);
-            ProgressBar loadingRel = (ProgressBar)rootView.findViewById(R.id.loadingRel);
+            Log.e("Reliabilties","On create view");
+
+            final String result;
+
+
+            rootView = inflater.inflate(R.layout.fragment_reliabilities, container, false);
+            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+            ARG_SECTION_NO = getArguments().getInt(ARG_SECTION_NUMBER);
+            //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+
+            recordsList= (ListView)rootView.findViewById(R.id.reliabilitylist);
+            loadingRel = (ProgressBar)rootView.findViewById(R.id.loadingRel);
 
             loadingRel.setVisibility(View.VISIBLE);
+
+            //single network call to get everything
+            reliabilitiesListviewAdapter = new ReliabilitiesListviewAdapter();
+
+            if(ARG_SECTION_NO == 1)
+                textView.setText("Reliable Users");
+            else
+                textView.setText("Pending Reliable Users");
 
 
             return rootView;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
     }
 
     /**

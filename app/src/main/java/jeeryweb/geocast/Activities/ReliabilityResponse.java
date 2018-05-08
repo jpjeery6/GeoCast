@@ -52,6 +52,7 @@ public class ReliabilityResponse extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reliability_response);
+
         Intent intent = getIntent();
         username = intent.getStringExtra("RReqUsername");
 

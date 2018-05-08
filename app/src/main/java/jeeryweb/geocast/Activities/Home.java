@@ -379,15 +379,15 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     //extract nearby users
                     result = getRealTime.toString();
                     String[] nearby = result.split("nearby");
-                    Log.e("no of nearby users", String.valueOf(nearby.length));
+                    //Log.e("no of nearby users", String.valueOf(nearby.length));
                     nearbyLatlang = new ArrayList<>();
                     nearbyMarkers = new ArrayList<>();
                     nearbyUsername = new ArrayList<>();
                     for (int i = 1; i < nearby.length; i++)   //no of users nearby
                     {
-                        Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
+                        //Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
                         String[] nearbylattlong = nearby[i].split("\\|");
-                        Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
+                        //Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
                         //Log.e("nearbylattlong",nearbylattlong[0]);
                         String nearUser = nearbylattlong[0];
                         String nearbylatt = nearbylattlong[1];
@@ -397,7 +397,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                         nearbyLatlang.add(i - 1, latLng);
                         nearbyUsername.add(i - 1, nearUser);
                     }
-                    Log.e("nearby users", String.valueOf(nearby.length));
+                    //Log.e("nearby users", String.valueOf(nearby.length));
                 }
             }
         };
@@ -528,7 +528,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     network = new Network(apiEndPoint.nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
                     result = network.DoWork();
                     if (result != null && result.contains("nearby")) {
-                        Log.e("getreal time locs", "recieved locations");
+                        //Log.e("getreal time locs", "recieved locations");
                         //pass this result to UI thread by writing a message to the UI's handler
                         Message m = Message.obtain();
                         Bundle bundle = new Bundle();
@@ -558,7 +558,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 mcurrentCircle.remove();
             if (nearbyMarkers != null) {
                 removeNearbyUsersMarker();
-                Log.e("homeLocationSuccess", "remove nearby users ");
+                //Log.e("homeLocationSuccess", "remove nearby users ");
             }
 
 
@@ -582,10 +582,10 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
             //place markers at nearby locations
             if (nearbyLatlang != null) {
-                Log.e("nearbyLatlang=", String.valueOf(nearbyLatlang.size()));
+                //Log.e("nearbyLatlang=", String.valueOf(nearbyLatlang.size()));
                 for (int i = 0; i < nearbyLatlang.size(); i++)   //no of users nearby
                 {
-                    Log.e("nearby[]", String.valueOf(i) + " :");
+                    //Log.e("nearby[]", String.valueOf(i) + " :");
                     markerOptions = new MarkerOptions();
                     markerOptions.position(nearbyLatlang.get(i));
                     markerOptions.snippet("Set as Reliable User?");
