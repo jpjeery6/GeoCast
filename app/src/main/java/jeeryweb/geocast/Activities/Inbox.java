@@ -1,5 +1,7 @@
 package jeeryweb.geocast.Activities;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,36 +19,53 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jeeryweb.geocast.Adapters.InboxListviewAdapter;
+import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Models.InboxRowRecord;
 import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 import jeeryweb.geocast.databinding.ActivityInboxBinding;
 
 public class Inbox extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     public boolean isInFront;
+    private String TAG = "Inbox";
     String filename = "GeoCastInbox";
+    String username,password;
     Context con;
+    Activity act;
     ActivityInboxBinding activityInboxBinding;
     InboxListviewAdapter inboxListviewAdapter;
     ListView recordsList;
     NavigationView navigationView;
+    APIEndPoint apiEndPoint;
+    SharedPrefHandler sharedPrefHandler;
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inbox);
+        sharedPrefHandler = new SharedPrefHandler(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -90,6 +109,7 @@ public class Inbox extends AppCompatActivity
         //getting widgets
         recordsList = (ListView) findViewById(R.id.chatList);
         con = this;
+        act = this;
 
         inboxListviewAdapter = new InboxListviewAdapter();
 
@@ -97,38 +117,105 @@ public class Inbox extends AppCompatActivity
         String[] separated;
 
         //convert the file into a list
-        List<InboxRowRecord> rows = new ArrayList<>();
-        try {
-            InputStream inputStream = this.openFileInput(filename);
+        final List<InboxRowRecord> rows = new ArrayList<>();
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
 
-            if (inputStream != null) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
+        HashMap<String, String> user = sharedPrefHandler.getUserDetails();
+        username = user.get("name");
+        password = user.get("pass");
+        Log.e(TAG + " retrieved session:", username + "  " + password);
 
-                while ((receiveString = bufferedReader.readLine()) != null) {
-                    //here i am getting each line
-                    //scan each message and separate the parts in the message
-                    Log.e("lines = ", receiveString);
-                    if (receiveString.contains("%")) {
-                        separated = receiveString.split("%");
 
-                        // if sender is same create only one entry in listview
-                        rows.add(new InboxRowRecord(separated[0], separated[1], separated[2]));
+        progressDialog = new ProgressDialog(Inbox.this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Fetching Messages");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.getAllMessages,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                            progressDialog.dismiss();
+                            try {
+                              JSONObject obj = new JSONObject(response);
+                              if(!obj.getBoolean("success")){
+                                  Log.e(TAG, "Error occurred suucess failed");
+                                  Toast.makeText(con, "Error occurred", Toast.LENGTH_SHORT).show();
+                              }
+
+                              JSONArray objArray = obj.getJSONArray("message");
+
+                              Log.e(TAG, String.valueOf(objArray));
+                              for (int i = 0; i < objArray.length(); i++) {
+                                    JSONObject rowobj = objArray.getJSONObject(i);
+
+                                    rows.add(new InboxRowRecord(
+                                            rowobj.getString("user"),
+                                            rowobj.getString("msg"),
+                                            rowobj.getString("time"),
+                                            rowobj.getString("lattitude"),
+                                            rowobj.getString("longitude"),
+                                            rowobj.getString("profilePic")));
+                                }
+                                inboxListviewAdapter.recordsInListview(con, recordsList,act , rows);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                Log.e(TAG, "Error occurred parse error");
+                                Toast.makeText(con, "Response error from server", Toast.LENGTH_SHORT).show();
+                            }
                     }
-                }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }){
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("Username", username);
+                params.put("Password", password);
 
-                inputStream.close();
+                return params;
             }
-        } catch (FileNotFoundException e) {
-            Log.e("File Helper", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("File Helper", "Can not read file: " + e.toString());
-        }
+        };
+
+        requestQueue.add(stringRequest);
+
+//        try {
+//            InputStream inputStream = this.openFileInput(filename);
+//
+//            if (inputStream != null) {
+//                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+//                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+//                String receiveString = "";
+//
+//                while ((receiveString = bufferedReader.readLine()) != null) {
+//                    //here i am getting each line
+//                    //scan each message and separate the parts in the message
+//                    Log.e("lines = ", receiveString);
+//                    if (receiveString.contains("%")) {
+//                        separated = receiveString.split("%");
+//
+//                        // if sender is same create only one entry in listview
+//                        rows.add(new InboxRowRecord(separated[0], separated[1], separated[2]));
+//                    }
+//                }
+//
+//                inputStream.close();
+//            }
+//        } catch (FileNotFoundException e) {
+//            Log.e("File Helper", "File not found: " + e.toString());
+//        } catch (IOException e) {
+//            Log.e("File Helper", "Can not read file: " + e.toString());
+//        }
 
         //now send the list to populate the listview
-        Collections.reverse(rows);
-        inboxListviewAdapter.recordsInListview(this, recordsList, this, rows);
+        //Collections.reverse(rows);
+
     }
 
     @Override

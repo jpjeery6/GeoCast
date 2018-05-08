@@ -16,4 +16,7 @@
     <color name="colorMaterialYellow">#FFB300</color>
     <color name="colorMaterialGreen">#00BFA5</color>
     <color name="colorWhitePress">#AAA</color>
+    <color name="ackYes">#16bc74</color>
+    <color name="ackNo">#bc1616</color>
+    <color name="text_shadow">#7F000000</color>
 </resources>
