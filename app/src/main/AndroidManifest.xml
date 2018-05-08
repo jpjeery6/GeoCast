@@ -153,7 +153,12 @@
         <activity
             android:name=".Activities.MessageExpanded"
             android:label="@string/title_activity_message_expanded"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:parentActivityName=".Activities.Inbox"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="jeeryweb.geocast.Activities.Inbox" />
+        </activity>
     </application>
 
 </manifest>
