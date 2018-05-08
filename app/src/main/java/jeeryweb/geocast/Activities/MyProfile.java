@@ -162,6 +162,7 @@ public class MyProfile extends AppCompatActivity {
             HashMap<String,String> detail = new HashMap<>();
             detail.put("name", name);
             detail.put("image", encodeImage);
+            detail.put("user",usernameName);
 
             try{
                 //convert this HashMap to encodedUrl to send to php file
@@ -184,8 +185,10 @@ public class MyProfile extends AppCompatActivity {
         protected void onPostExecute(String s){
             //show image uploaded
             progressDialogUplaod.dismiss();
+
             if(s!=null) {
                 Toast.makeText(getApplicationContext(), "Image Uploaded " + s, Toast.LENGTH_SHORT).show();
+                Log.e("Myprofile", s);
                 profilePic.setImageBitmap(bitmapPP);
             }
             else
