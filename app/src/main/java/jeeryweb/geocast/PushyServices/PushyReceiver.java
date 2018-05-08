@@ -21,6 +21,9 @@ public class PushyReceiver extends BroadcastReceiver {
         Log.e("pushy rec","something is recieved fron puahy");
         String notificationTitle = null;
         String clickParameter = null;
+        String msgTime = "2018-05-08 09:00:00 pm";
+        String msgLatt = "26.98";
+        String msgLon = "93.8";
         String notificationText = "Test body";
 
         if (intent.getStringExtra("parameter") != null) {
@@ -34,6 +37,26 @@ public class PushyReceiver extends BroadcastReceiver {
         // Attempt to extract the "message" property from the payload: {"message":"Hello World!"}
         if (intent.getStringExtra("message") != null) {
             notificationText = intent.getStringExtra("message");
+        }
+        if(intent.getStringExtra("time") == null)
+            Log.e("Pushy Reciever","time null");
+
+        if(intent.getStringExtra("latti") == null)
+            Log.e("Pushy Reciever","latti null");
+        if(intent.getStringExtra("longi") == null)
+            Log.e("Pushy Reciever","longi null");
+
+        if (intent.getStringExtra("time") != null) {
+            Log.e("Pushy Reciever","time null");
+            msgTime = intent.getStringExtra("time");
+        }
+        if (intent.getStringExtra("latti") != null) {
+            Log.e("Pushy Reciever","latti null");
+            msgLatt = intent.getStringExtra("latti");
+        }
+        if (intent.getStringExtra("longi") != null) {
+            Log.e("Pushy Reciever","longi null");
+            msgLon = intent.getStringExtra("longi");
         }
 
         // Prepare a notification with vibration, sound and lights
@@ -52,8 +75,9 @@ public class PushyReceiver extends BroadcastReceiver {
             intentAct  = new Intent(context,MessageExpanded.class);
             intentAct.putExtra("sender", notificationTitle);
             intentAct.putExtra("msg", notificationText);
-            intentAct.putExtra("time","null" );
-
+            intentAct.putExtra("time",msgTime );
+            intentAct.putExtra("latti",msgLatt );
+            intentAct.putExtra("longi",msgLon );
         }
         else if(clickParameter.contains("rel"))
         {

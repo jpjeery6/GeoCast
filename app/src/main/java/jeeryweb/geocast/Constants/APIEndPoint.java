@@ -20,5 +20,6 @@ public class APIEndPoint {
     static public final String sendreliableresconf = "http://geocast.in/acceptDenyReliability.php?mode=android";
     static public final String updatePushy = "http://geocast.in/updatePushy.php?mode=android";
     static public final String getAllMessages = "http://geocast.in/getAllMessages.php?mode=android";
+    static public final String getReliabilities = "http://geocast.in/getReliabilities.php?mode=android";
 
 }
