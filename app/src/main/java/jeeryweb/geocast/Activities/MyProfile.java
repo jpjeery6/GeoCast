@@ -16,7 +16,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,7 +30,9 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import jeeryweb.geocast.Constants.APIEndPoint;
+import jeeryweb.geocast.Fragments.MyProfileShow;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.PPUpload;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
@@ -40,8 +41,7 @@ public class MyProfile extends AppCompatActivity {
 
 
     private ImageButton selectProfilePic;
-    private ImageView profilePic;
-    private TextView usernamePP,occupationPP,agePP,genderPP,phonePP;
+    private CircleImageView profilePic;
     private static final int RESULT_SELECT_IMAGE = 1;
     private ProgressDialog progressDialogUplaod;
     private String usernameName;
@@ -52,6 +52,7 @@ public class MyProfile extends AppCompatActivity {
 //    private final String url_uplaod = "https://jeeryweb.000webhostapp.com/ProjectLoc/saveProPic.php";
     private String pathPP;
     private Bitmap bitmapPP;
+    private TextView usernamePP;
     private  SharedPrefHandler sharedPrefHandler;
 
 
@@ -63,16 +64,16 @@ public class MyProfile extends AppCompatActivity {
         sharedPrefHandler=new SharedPrefHandler(this);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         c=this;
         sharedPrefHandler= new SharedPrefHandler(this);
 
-        selectProfilePic = (ImageButton)findViewById(R.id.activity_myprofile_addimagebutton);
-        profilePic = (ImageView)findViewById(R.id.activity_myprofile_pp);
         usernamePP = (TextView) findViewById(R.id.activity_myprofile_username);
-        occupationPP = (TextView) findViewById(R.id.activity_myprofile_profession);
-        agePP = (TextView) findViewById(R.id.activity_myprofile_age);
-        genderPP = (TextView) findViewById(R.id.activity_myprofile_gender);
-        phonePP = (TextView) findViewById(R.id.activity_myprofile_phno);
+        selectProfilePic = (ImageButton)findViewById(R.id.activity_myprofile_addimagebutton);
+        profilePic = (CircleImageView) findViewById(R.id.activity_myprofile_pp);
+
+        usernamePP.setText(Home.username);
+
 
 
         selectProfilePic.setOnClickListener(new View.OnClickListener() {
@@ -88,11 +89,35 @@ public class MyProfile extends AppCompatActivity {
         if(sharedPrefHandler.getPPpath()!= null)
             profilePic.setImageBitmap(getSavedProfilePicture(sharedPrefHandler.getPPpath()));
 
-        usernamePP.setText(usernameName);
-        occupationPP.setText(sharedPrefHandler.getOccupation());
-        agePP.setText(sharedPrefHandler.getAge());
-        genderPP.setText(sharedPrefHandler.getGender());
-        phonePP.setText(sharedPrefHandler.getPhoneNo());
+
+        // initially load the my profile show fragment
+        if (findViewById(R.id.profile_fragment_replace) != null) {
+
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            // Create a new Fragment to be placed in the activity layout
+            MyProfileShow firstFragment = new MyProfileShow();
+
+            // In case this activity was started with special instructions from an
+            // Intent, pass the Intent's extras to the fragment as arguments
+            //firstFragment.setArguments(getIntent().getExtras());
+
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction().add(R.id.profile_fragment_replace, firstFragment).commit();
+
+
+        }
+
+
+
+
+
+
 
     }
 

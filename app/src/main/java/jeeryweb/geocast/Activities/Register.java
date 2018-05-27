@@ -57,14 +57,13 @@ public class Register extends AppCompatActivity {
     Handler handler;
 
     //widgets
-    EditText reguser , regpass1,regpass2 , bioAge , bioOccupation , phone;
+    EditText reguser , regpass1,regpass2 , bioAge , bioOccupation , phone , imeiShow;
     RadioGroup bioGender;
     Button register ;
     TextView loginLink;
     ProgressDialog progressDialog , progressDialogUplaod;
 
     String bio,fcmtoken;
-    TextView iemiNumberSlot;
     String imeiNumber;
     ImageView imageView;
     ImageButton selectImage;
@@ -96,13 +95,13 @@ public class Register extends AppCompatActivity {
         regpass2=(EditText)findViewById(R.id.activity_register_pass2);
         register=(Button)findViewById(R.id.activity_register_regbtn) ;
         loginLink=(TextView)findViewById(R.id.activity_register_link_login);
+        imeiShow = (EditText)findViewById(R.id.activity_reg_imei);
 
         bioAge = (EditText)findViewById(R.id.activity_register_bioage);
         bioOccupation = (EditText)findViewById(R.id.activity_register_biooccupation);
         bioGender = (RadioGroup)findViewById(R.id.activity_register_biogender);
 
         phone = (EditText)findViewById(R.id.activity_register_phonenumber);
-        iemiNumberSlot = (TextView)findViewById(R.id.activity_register_ieminumber);
 
         imageView = (ImageView) findViewById(R.id.activity_register_pp_imageView);
         selectImage = (ImageButton) findViewById(R.id.activity_register_ppselectImage);
@@ -112,7 +111,7 @@ public class Register extends AppCompatActivity {
 
         //get imei number and save in shared preference
         imeiNumber = imeiExtractor.getPhoneIEMINumber();
-        iemiNumberSlot.setText(imeiNumber);
+        imeiShow.setText(imeiNumber);
         session.saveIMEI(imeiNumber);
 
 
@@ -131,6 +130,7 @@ public class Register extends AppCompatActivity {
             public void onClick(View v) {
                 // Start the Signup activity
                 Intent intent = new Intent(getApplicationContext(), Login.class);
+                //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 finish();
             }

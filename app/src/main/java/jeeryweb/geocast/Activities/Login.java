@@ -48,7 +48,7 @@ public class Login extends AppCompatActivity {
 //    private final String migL = "https://jeeryweb.000webhostapp.com/ProjectLoc/migrate.php";
 
     //widgets
-    EditText user, pass;
+    EditText user, pass , imeiShow;
     Button login;
     TextView registerLink,migrate;
     ProgressDialog progressDialog;
@@ -78,6 +78,7 @@ public class Login extends AppCompatActivity {
         //setting up widgets
         user = (EditText) findViewById(R.id.activity_login_user);
         pass = (EditText) findViewById(R.id.activity_login_pass);
+        imeiShow = (EditText) findViewById(R.id.activity_login_imei);
         login = (Button) findViewById(R.id.activity_login_loginbtn);
         registerLink = (TextView) findViewById(R.id.activity_login_link_signup);
         migrate = (TextView) findViewById(R.id.activity_login_migartebtn);
@@ -138,6 +139,8 @@ public class Login extends AppCompatActivity {
                 finish();
             }
         });
+
+        imeiShow.setText(getPhoneIEMINumber());
 
 
         //Handler for communication between UI and login/ register thread

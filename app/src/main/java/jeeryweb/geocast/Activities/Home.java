@@ -36,6 +36,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -61,6 +67,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
@@ -124,6 +131,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     //Objects
     private BroadcastReceiver receiver;
     // required for location purpose
+    private RequestQueue requestQueue;
     private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
@@ -356,6 +364,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         Log.e("Main2Activity Threads=", " " + Thread.activeCount());
 
+
+        requestQueue = Volley.newRequestQueue(this);
         //execution going to the callback
         mapFragment.getMapAsync(this);
 
@@ -364,7 +374,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             @Override
             public void run() {
                 getRealTimeLocations();
-                homeLocationSuccessDoWork();
+                //homeLocationSuccessDoWork();
                 mapView.postDelayed(this,10000);
             }
         });
@@ -383,31 +393,31 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
                 }
 
-                getRealTime = msg.getData().get("resultRealTime");
-                if (getRealTime != null) {
-                    //extract nearby users
-                    result = getRealTime.toString();
-                    String[] nearby = result.split("nearby");
-                    //Log.e("no of nearby users", String.valueOf(nearby.length));
-                    nearbyLatlang = new ArrayList<>();
-                    nearbyMarkers = new ArrayList<>();
-                    nearbyUsername = new ArrayList<>();
-                    for (int i = 1; i < nearby.length; i++)   //no of users nearby
-                    {
-                        //Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
-                        String[] nearbylattlong = nearby[i].split("\\|");
-                        //Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
-                        //Log.e("nearbylattlong",nearbylattlong[0]);
-                        String nearUser = nearbylattlong[0];
-                        String nearbylatt = nearbylattlong[1];
-                        String nearbylong = nearbylattlong[2];         //each user's latt long
-                        //create new marker
-                        LatLng latLng = new LatLng(Double.valueOf(nearbylatt), Double.valueOf(nearbylong));
-                        nearbyLatlang.add(i - 1, latLng);
-                        nearbyUsername.add(i - 1, nearUser);
-                    }
-                    //Log.e("nearby users", String.valueOf(nearby.length));
-                }
+//                getRealTime = msg.getData().get("resultRealTime");
+//                if (getRealTime != null) {
+//                    //extract nearby users
+//                    result = getRealTime.toString();
+//                    String[] nearby = result.split("nearby");
+//                    //Log.e("no of nearby users", String.valueOf(nearby.length));
+//                    nearbyLatlang = new ArrayList<>();
+//                    nearbyMarkers = new ArrayList<>();
+//                    nearbyUsername = new ArrayList<>();
+//                    for (int i = 1; i < nearby.length; i++)   //no of users nearby
+//                    {
+//                        //Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
+//                        String[] nearbylattlong = nearby[i].split("\\|");
+//                        //Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
+//                        //Log.e("nearbylattlong",nearbylattlong[0]);
+//                        String nearUser = nearbylattlong[0];
+//                        String nearbylatt = nearbylattlong[1];
+//                        String nearbylong = nearbylattlong[2];         //each user's latt long
+//                        //create new marker
+//                        LatLng latLng = new LatLng(Double.valueOf(nearbylatt), Double.valueOf(nearbylong));
+//                        nearbyLatlang.add(i - 1, latLng);
+//                        nearbyUsername.add(i - 1, nearUser);
+//                    }
+//                    //Log.e("nearby users", String.valueOf(nearby.length));
+//                }
             }
         };
     }
@@ -530,25 +540,79 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     private void getRealTimeLocations() {
         //get real time locations
         //do this on a new thread
-        new Thread(new Runnable() {
-            public void run() {
-                // a potentially  time consuming task
-                if (locationObj != null) {
-                    network = new Network(apiEndPoint.nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
-                    result = network.DoWork();
-                    if (result != null && result.contains("nearby")) {
-                        //Log.e("getreal time locs", "recieved locations");
-                        //pass this result to UI thread by writing a message to the UI's handler
-                        Message m = Message.obtain();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("resultRealTime", result);
-                        m.setData(bundle);
-                        handler.sendMessage(m);
+//        new Thread(new Runnable() {
+//            public void run() {
+//                // a potentially  time consuming task
+//                if (locationObj != null) {
+//                    network = new Network(apiEndPoint.nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
+//                    result = network.DoWork();
+//                    if (result != null && result.contains("nearby")) {
+//                        //Log.e("getreal time locs", "recieved locations");
+//                        //pass this result to UI thread by writing a message to the UI's handler
+//                        Message m = Message.obtain();
+//                        Bundle bundle = new Bundle();
+//                        bundle.putString("resultRealTime", result);
+//                        m.setData(bundle);
+//                        handler.sendMessage(m);
+//                    }
+//                }
+//            }
+//        }).start();
+
+
+        //do this thing using volley bcz handler may the one creating the lag
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.nearbyusers,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        String[] nearby = response.split("nearby");
+                        //Log.e("no of nearby users", String.valueOf(nearby.length));
+                        nearbyLatlang = new ArrayList<>();
+                        nearbyMarkers = new ArrayList<>();
+                        nearbyUsername = new ArrayList<>();
+                        for (int i = 1; i < nearby.length; i++)   //no of users nearby
+                        {
+                            //Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
+                            String[] nearbylattlong = nearby[i].split("\\|");
+                            //Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
+                            //Log.e("nearbylattlong",nearbylattlong[0]);
+                            String nearUser = nearbylattlong[0];
+                            String nearbylatt = nearbylattlong[1];
+                            String nearbylong = nearbylattlong[2];         //each user's latt long
+                            //create new marker
+                            LatLng latLng = new LatLng(Double.valueOf(nearbylatt), Double.valueOf(nearbylong));
+                            nearbyLatlang.add(i - 1, latLng);
+                            nearbyUsername.add(i - 1, nearUser);
+                        }
+
+                        homeLocationSuccessDoWork();
                     }
-                }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }){
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("Username", username);
+                params.put("Password", password);
+                params.put("Latitude", Double.toString(locationObj.getLatitude()));
+                params.put("Longitude", Double.toString(locationObj.getLongitude()));
+
+                return params;
             }
-        }).start();
+        };
+
+        requestQueue.add(stringRequest);
+
+
     }
+
 
 
     void homeLocationSuccessDoWork() {
@@ -905,6 +969,11 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             } else
                 Toast.makeText(con, "You already have messages", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.home_action_settings) {
+            Intent i = new Intent(con, jeeryweb.geocast.Activities.Settings.class);
+            con.startActivity(i);
+            //finish();
+
+
             return true;
         }
 
