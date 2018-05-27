@@ -8,4 +8,13 @@
     tools:context="jeeryweb.geocast.Activities.Sent"
     tools:showIn="@layout/app_bar_sent">
 
+    <ListView
+        android:id="@+id/SentchatList"
+        android:layout_marginTop="60dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="@color/colorLightGrayLine"
+        android:dividerHeight="0.3dp">
+    </ListView>
+
 </android.support.constraint.ConstraintLayout>

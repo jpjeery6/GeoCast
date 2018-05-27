@@ -152,7 +152,7 @@ public class MyProfile extends AppCompatActivity {
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             //compress the image to jpg format
-            image.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
+            image.compress(Bitmap.CompressFormat.JPEG,30,byteArrayOutputStream);
             /*
             * encode image to base64 so that it can be picked by saveImage.php file
             * */

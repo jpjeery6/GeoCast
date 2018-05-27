@@ -11,6 +11,7 @@ import android.media.RingtoneManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import jeeryweb.geocast.Activities.Home;
 import jeeryweb.geocast.Activities.MessageExpanded;
 import jeeryweb.geocast.Activities.ReliabilityResponse;
 
@@ -92,6 +93,12 @@ public class PushyReceiver extends BroadcastReceiver {
             intentAct  = new Intent(context,ReliabilityResponse.class);
             intentAct.putExtra("RReqUsername",notificationTitle);
         }
+        else if(clickParameter.contains("ack")){
+            Log.e("puhy messgae rec","type recep from message acknoledgement");
+            intentAct  = new Intent(context,Home.class);
+            intentAct.putExtra("helper", notificationTitle);
+            Log.e("puhy messgae rec", "helper is ready "+ notificationText);
+        }
 
 
 
@@ -100,6 +107,7 @@ public class PushyReceiver extends BroadcastReceiver {
         // if your app is targeting API Level 26 and up (Android O)
         // More info: http://bit.ly/2Bzgwl7
         builder.setChannelId("myNotificationChannelId");
+        builder.setAutoCancel(true);
 
         // Get an instance of the NotificationManager service
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
