@@ -1,9 +1,9 @@
 package jeeryweb.geocast.Activities;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -21,17 +21,32 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jeeryweb.geocast.Adapters.ReliabilitiesListviewAdapter;
 import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Models.ReliabilitiesRowRecord;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.Network;
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class Reliabilities extends AppCompatActivity {
 
@@ -51,22 +66,27 @@ public class Reliabilities extends AppCompatActivity {
     private ViewPager mViewPager;
     static View rootView;
     static int ARG_SECTION_NO;
-    static ProgressBar loadingRel;
-    static ListView recordsList;
+    static ListView recordsList1,recordsList2;
     private static Network network;
     private static Handler handler;
     private static APIEndPoint apiEndPoint;
+    private SharedPrefHandler sharedPrefHandler;
     private static ReliabilitiesListviewAdapter reliabilitiesListviewAdapter;
     private static List<ReliabilitiesRowRecord> rowsRel = new ArrayList<>();
     private static List<ReliabilitiesRowRecord> rowsPRel = new ArrayList<>();
+    final String TAG = "Reliabilties";
+    Context con;
+    String username, password;
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reliabilities);
 
-        Log.e("Reliabilties","On Create");
-
+        Log.e(TAG,"On Create");
+        con = this;
+        sharedPrefHandler = new SharedPrefHandler(con);
         Window window = this.getWindow();
         // clear FLAG_TRANSLUCENT_STATUS flag:
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -89,72 +109,102 @@ public class Reliabilities extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabindicator);
         tabLayout.setupWithViewPager(mViewPager, true);
 
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        HashMap<String, String> user = sharedPrefHandler.getUserDetails();
+        username = user.get("name");
+        password = user.get("pass");
 
-        new Thread(new Runnable() {
-            public void run() {
-                Log.e("Reliabilties","in new threaed");
-                network = new Network(APIEndPoint.getReliabilities, Home.username, Home.password, "bhbh", null, null, "ksdhfj", null, null, null, null);
-                String result = network.DoWork();
-                if (result != null) {
-                    //Log.e(TAG, "send message main thread" + result);
-                    //pass this result to UI thread by writing a message to the UI's handler
-                    //we have to parse the result into two arrays rowsRel and rowsPRel
-                    Message m = Message.obtain();
-                    Bundle bundle = new Bundle();
-                    bundle.putString("resultRelReq", result);
-                    m.setData(bundle);
-                    handler.sendMessage(m);
-                }
-            }
-        }).start();
+        progressDialog = new ProgressDialog(Reliabilities.this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Fetching Data...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();
 
+        rowsPRel.clear();
+        rowsRel.clear();
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.getReliableConnections,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progressDialog.dismiss();
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if(!obj.getBoolean("success")){
+                                Log.e(TAG, "Error occurred suucess failed");
+                                Toast.makeText(con, "Error occurred", Toast.LENGTH_SHORT).show();
+                            }
 
-        //getting to main ui Thread*********************
-        handler = new Handler(Looper.getMainLooper()) {
-            Object relReqs, pRelReqs;
+                            JSONArray objArray = obj.getJSONArray("message");
 
-            @Override
-            public void handleMessage(Message msg) {
+                            Log.e(TAG, String.valueOf(objArray));
+                            for (int i = 0; i < objArray.length(); i++) {
+                                JSONObject rowobj = objArray.getJSONObject(i);
 
-                relReqs = msg.getData().get("resultRelReq");
+                                if(rowobj.getInt("RStatus")==1){
+                                    rowsRel.add(new ReliabilitiesRowRecord(
+                                            rowobj.getString("user"),
+                                            rowobj.getString("picture"),
+                                            rowobj.getInt("userID"),
+                                            rowobj.getInt("RStatus")
+                                    ));
+                                }
+                                if(rowobj.getInt("RStatus")==0){
+                                    rowsPRel.add(new ReliabilitiesRowRecord(
+                                            rowobj.getString("user"),
+                                            rowobj.getString("picture"),
+                                            rowobj.getInt("userID"),
+                                            rowobj.getInt("RStatus")
+                                    ));
+                                }
+                            }
+                            Collections.reverse(rowsPRel);
+                            Collections.reverse(rowsRel);
 
-                if (relReqs != null) {
-                    //Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
-                    Log.e("Reliabilties","got result from network");
-                    String resultList = relReqs.toString();
-                    String[] listArray = resultList.split("%");
-                    Log.e("listArray size","= "+String.valueOf(listArray.length));
-                    for(int i= 1 ;i<listArray.length-1;i=i+2)
-                    {
-                        //if(Integer.parseInt(listArray[i+1]) == 0)
-                            rowsRel.add(new ReliabilitiesRowRecord(listArray[i],"abc" , "abc"));
-                        //else
-                            rowsPRel.add(new ReliabilitiesRowRecord(listArray[i],"abc" , "abc"));
-                        Log.e("listArray["+ i + "] = ",listArray[i]);
+                            Log.e(TAG, "rowsPrel "+String.valueOf(rowsPRel));
+                            Log.e(TAG, "rowsRel "+String.valueOf(rowsRel));
+                            updateUI(1);
+                            updateUI(2);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "Error "+e);
+                            Toast.makeText(con, "Response error from server", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                    updateUI();
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG,error.getMessage());
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }){
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("Username", username);
+                params.put("Password", password);
 
-                }
-
+                return params;
             }
-
         };
-
-
+        requestQueue.add(stringRequest);
 
     }
 
-    private void updateUI() {
-        if (loadingRel != null && recordsList != null && reliabilitiesListviewAdapter != null) {
-            loadingRel.setVisibility(View.INVISIBLE);
-            if (ARG_SECTION_NO == 1) {
+    private void updateUI(int id) {
+        if (recordsList1 != null && reliabilitiesListviewAdapter != null) {
+            if (id == 1) {
                 Log.e("Arg section 1","yes");
-                reliabilitiesListviewAdapter.recordsInListview(this, recordsList, this, rowsRel);
+                reliabilitiesListviewAdapter.recordsInListview(this, recordsList1, this, rowsRel);
             }
             else{
                 Log.e("Arg section 2","yes");
-                reliabilitiesListviewAdapter.recordsInListview(this, recordsList, this, rowsPRel);
+                reliabilitiesListviewAdapter.recordsInListview(this, recordsList2, this, rowsPRel);
         }}
+    }
+    public void loadAllData(){
+
     }
 
 
@@ -226,18 +276,22 @@ public class Reliabilities extends AppCompatActivity {
             ARG_SECTION_NO = getArguments().getInt(ARG_SECTION_NUMBER);
             //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
-            recordsList= (ListView)rootView.findViewById(R.id.reliabilitylist);
-            loadingRel = (ProgressBar)rootView.findViewById(R.id.loadingRel);
-
-            loadingRel.setVisibility(View.VISIBLE);
+            if(ARG_SECTION_NO==1)
+              recordsList1= (ListView)rootView.findViewById(R.id.reliabilitylist);
+            else
+              recordsList2= (ListView)rootView.findViewById(R.id.reliabilitylist);
 
             //single network call to get everything
             reliabilitiesListviewAdapter = new ReliabilitiesListviewAdapter();
 
-            if(ARG_SECTION_NO == 1)
+            if(ARG_SECTION_NO == 1){
                 textView.setText("Reliable Users");
-            else
+            }
+
+            else{
                 textView.setText("Pending Reliable Users");
+            }
+
 
 
             return rootView;

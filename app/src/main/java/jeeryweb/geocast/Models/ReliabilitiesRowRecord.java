@@ -5,12 +5,14 @@ import android.util.Log;
 public class ReliabilitiesRowRecord {
 
 
-    public String sender,txt,time;
+    public String sender,picture;
+    public int userID, type;
 
-    public ReliabilitiesRowRecord(String sender, String txt, String time) {
+    public ReliabilitiesRowRecord(String sender, String picture ,int userID , int type) {
         this.sender=sender;
-        this.txt=txt;
-        this.time=time;
+        this.picture=picture;
+        this.userID = userID;
+        this.type = type; //1=confirm , 2=cancel , 0 = pending
         Log.e("contacts ::::: = ", sender);
     }
 }

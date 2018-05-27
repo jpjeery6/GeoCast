@@ -245,8 +245,17 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //logged in first time or not --required for fcm token sending........................................
         Bundle bundle = getIntent().getExtras();
-        if (bundle != null)
+        Intent i = getIntent();
+
+        if (bundle != null){
             firstTime = bundle.getBoolean("firstTime");
+            if(i.hasExtra("helper")){
+               String helper = bundle.getString("helper");
+               Log.e(TAG, "Helper::: "+helper);
+               Toast.makeText(con, "Helper:::::: "+helper, Toast.LENGTH_SHORT).show();
+            }
+        }
+
 
 
         //Retrieving username and password ..................................................................
@@ -989,6 +998,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             con.startActivity(i);
 
         } else if (id == R.id.home_nav_sent) {
+            Intent i = new Intent(con, Sent.class);
+            con.startActivity(i);
 
         } else if (id == R.id.home_nav_reliabilties) {
             // Handle the inbox........................................................................................
