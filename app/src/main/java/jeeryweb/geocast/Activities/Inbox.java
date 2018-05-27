@@ -271,13 +271,25 @@ public class Inbox extends AppCompatActivity
 
 
         } else if (id == R.id.inbox_nav_sent) {
-
+                startActivity(new Intent(this, Sent.class));
         } else if (id == R.id.inbox_nav_tools) {
 
-        } else if (id == R.id.inbox_nav_share) {
+        } else if (id == R.id.home_nav_share) {
 
-        } else if (id == R.id.inbox_nav_feedback) {
+            try {
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_SUBJECT, "GeoCast");
+                String sAux = "\nLet me recommend you this application\n\n";
+                sAux = sAux + "http://geocast.in \n\n";
+                i.putExtra(Intent.EXTRA_TEXT, sAux);
+                startActivity(Intent.createChooser(i, "choose one"));
+            } catch(Exception e) {
+                Log.e(TAG, "Error occurred in share");
+            }
 
+        } else if (id == R.id.home_nav_feedback) {
+            startActivity(new Intent(this, Feedback.class));
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

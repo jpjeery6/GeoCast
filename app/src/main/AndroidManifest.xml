@@ -150,6 +150,21 @@
 
         <activity android:name=".Activities.MessageExpanded" />
         <activity
+
+            android:name=".Activities.MessageExpanded"
+            android:label="@string/title_activity_message_expanded"
+            android:parentActivityName=".Activities.Inbox"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="jeeryweb.geocast.Activities.Inbox" />
+        </activity>
+        <activity android:name=".Activities.UserProfileView" />
+
+        <activity
+            android:name=".Activities.Feedback"
+            android:label="@string/title_activity_feedback"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
             android:name=".Activities.Settings"
             android:label="@string/title_activity_settings"></activity>
     </application>
