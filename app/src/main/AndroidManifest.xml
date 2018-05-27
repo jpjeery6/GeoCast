@@ -148,7 +148,6 @@
 
         <!-- End Pushy Declarations -->
 
-        <activity android:name=".Activities.MessageExpanded" />
         <activity
 
             android:name=".Activities.MessageExpanded"
@@ -165,6 +164,7 @@
             android:name=".Activities.Feedback"
             android:label="@string/title_activity_feedback"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
             android:name=".Activities.Settings"
             android:label="@string/title_activity_settings"></activity>
     </application>

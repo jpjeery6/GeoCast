@@ -122,7 +122,7 @@ public class Reliabilities extends AppCompatActivity {
 
         rowsPRel.clear();
         rowsRel.clear();
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.getReliableConnections,
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.getReliableConnections,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
