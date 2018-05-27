@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="jeeryweb.geocast.Activities.Feedback"
+    tools:showIn="@layout/activity_feedback">
+
+
+    <EditText
+        android:id="@+id/addr_edittext"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="top|left"
+        android:inputType="textMultiLine"
+        android:lines="20"
+        android:minLines="5"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="100dp"
+        android:text="Please write feedback here...."
+        android:scrollHorizontally="false"
+        android:scrollbars="vertical" />
+
+</android.support.constraint.ConstraintLayout>

@@ -159,9 +159,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="jeeryweb.geocast.Activities.Inbox" />
         </activity>
-        <activity android:name=".activity_confirmRejectRelaible" />
-        <activity android:name=".Activities.ConfirmRejectReliable" />
-        <activity android:name=".Activities.UserProfileView"></activity>
+        <activity android:name=".Activities.UserProfileView" />
+
+        <activity
+            android:name=".Activities.Feedback"
+            android:label="@string/title_activity_feedback"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
