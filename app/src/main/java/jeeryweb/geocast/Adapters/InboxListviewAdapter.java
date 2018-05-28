@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
@@ -53,6 +54,8 @@ public class InboxListviewAdapter {
         doneArr = new Boolean[rows.size()];
         Arrays.fill(doneArr, Boolean.FALSE);
 
+
+
     }
     public class InboxRowRecordAdapter extends BaseAdapter implements Filterable {
         LayoutInflater inflater;
@@ -65,7 +68,13 @@ public class InboxListviewAdapter {
             this.activity = activity;
             this.filter=rows;
             this.rows = rows;
+
+
+
+
         }
+
+
 
         @Override
         public int getCount() {
@@ -81,6 +90,8 @@ public class InboxListviewAdapter {
         public long getItemId(int position) {
             return position;
         }
+
+
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -118,31 +129,11 @@ public class InboxListviewAdapter {
             //}
 
 
-            inboxRowRecordBinding.displayLoc.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //open new fragment without nav bar
-                    //show location of origin of message
-                    //and path from current location to destination
-                    //Intent i = new Intent(con, MessageLocation.class);
-                    //i.putExtra("namesend",InboxRowRecord.sender);
-                    //con.startActivity(i);
-
-                    Intent passedIntent = new Intent(con, MessageExpanded.class);
-                    passedIntent.putExtra("msg" , inboxRowRecord.txt);
-                    passedIntent.putExtra("time", inboxRowRecord.time);
-                    passedIntent.putExtra("sender", inboxRowRecord.sender);
-                    passedIntent.putExtra("latti", inboxRowRecord.latti);
-                    passedIntent.putExtra("longi", inboxRowRecord.longi);
-                    con.startActivity(passedIntent);
-
-                }
-            });
-
             return inboxRowRecordBinding.getRoot();
         }
 
-        @Override
+
+
         public Filter getFilter() {
             if (valueFilter == null) {
                 valueFilter = new ValueFilter();

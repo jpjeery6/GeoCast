@@ -2,6 +2,7 @@ package jeeryweb.geocast.Activities;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.TabLayout;
@@ -20,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,6 +45,7 @@ import java.util.Map;
 
 import jeeryweb.geocast.Adapters.ReliabilitiesListviewAdapter;
 import jeeryweb.geocast.Constants.APIEndPoint;
+import jeeryweb.geocast.Models.InboxRowRecord;
 import jeeryweb.geocast.Models.ReliabilitiesRowRecord;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.Network;
@@ -145,6 +148,7 @@ public class Reliabilities extends AppCompatActivity {
                                             rowobj.getString("user"),
                                             rowobj.getString("picture"),
                                             rowobj.getInt("userID"),
+                                            rowobj.getBoolean("initiator"),
                                             rowobj.getInt("RStatus")
                                     ));
                                 }
@@ -153,6 +157,7 @@ public class Reliabilities extends AppCompatActivity {
                                             rowobj.getString("user"),
                                             rowobj.getString("picture"),
                                             rowobj.getInt("userID"),
+                                            rowobj.getBoolean("initiator"),
                                             rowobj.getInt("RStatus")
                                     ));
                                 }
@@ -174,7 +179,7 @@ public class Reliabilities extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG,error.getMessage());
+                        Log.e(TAG,"error volley " + error.getMessage());
                         Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }){
@@ -202,7 +207,41 @@ public class Reliabilities extends AppCompatActivity {
                 Log.e("Arg section 2","yes");
                 reliabilitiesListviewAdapter.recordsInListview(this, recordsList2, this, rowsPRel);
         }}
+
+        recordsList1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+                Log.e("Reliabilities", "Clicked in adapter");
+
+                Intent i = new Intent(con, UserProfileView.class);
+                i.putExtra("userID", rowsRel.get(pos).userID);
+                i.putExtra("Username", rowsRel.get(pos).sender);
+                con.startActivity(i);
+
+            }
+        });
+
+        recordsList2.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
+
+                if(rowsPRel.get(pos).type==0 && rowsPRel.get(pos).relUpDown == false){
+                    Intent i = new Intent(con, ReliabilityResponse.class);
+                    i.putExtra("RReqUsername",rowsPRel.get(pos).sender);
+                    con.startActivity(i);
+                }
+                else
+                {
+                    Intent i = new Intent(con, UserProfileView.class);
+                    i.putExtra("userID", rowsPRel.get(pos).userID);
+                    i.putExtra("Username", rowsPRel.get(pos).sender);
+                    con.startActivity(i);
+                }
+
+            }
+        });
     }
+
     public void loadAllData(){
 
     }

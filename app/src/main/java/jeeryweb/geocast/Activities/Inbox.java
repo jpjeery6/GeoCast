@@ -17,8 +17,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -60,6 +62,8 @@ public class Inbox extends AppCompatActivity
     APIEndPoint apiEndPoint;
     SharedPrefHandler sharedPrefHandler;
     ProgressDialog progressDialog;
+
+    List<InboxRowRecord> rows;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +121,7 @@ public class Inbox extends AppCompatActivity
         String[] separated;
 
         //convert the file into a list
-        final List<InboxRowRecord> rows = new ArrayList<>();
+        rows = new ArrayList<>();
         RequestQueue requestQueue = Volley.newRequestQueue(this);
 
         HashMap<String, String> user = sharedPrefHandler.getUserDetails();
@@ -158,6 +162,7 @@ public class Inbox extends AppCompatActivity
                                             rowobj.getString("longitude"),
                                             rowobj.getString("profilePic")));
                                 }
+                                //giving the list to an adapter
                                 inboxListviewAdapter.recordsInListview(con, recordsList,act , rows);
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -185,36 +190,28 @@ public class Inbox extends AppCompatActivity
 
         requestQueue.add(stringRequest);
 
-//        try {
-//            InputStream inputStream = this.openFileInput(filename);
-//
-//            if (inputStream != null) {
-//                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-//                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-//                String receiveString = "";
-//
-//                while ((receiveString = bufferedReader.readLine()) != null) {
-//                    //here i am getting each line
-//                    //scan each message and separate the parts in the message
-//                    Log.e("lines = ", receiveString);
-//                    if (receiveString.contains("%")) {
-//                        separated = receiveString.split("%");
-//
-//                        // if sender is same create only one entry in listview
-//                        rows.add(new InboxRowRecord(separated[0], separated[1], separated[2]));
-//                    }
-//                }
-//
-//                inputStream.close();
-//            }
-//        } catch (FileNotFoundException e) {
-//            Log.e("File Helper", "File not found: " + e.toString());
-//        } catch (IOException e) {
-//            Log.e("File Helper", "Can not read file: " + e.toString());
-//        }
-
         //now send the list to populate the listview
         //Collections.reverse(rows);
+
+
+        recordsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent passedIntent = new Intent(con, MessageExpanded.class);
+
+                //Object obj = adapterView.getItemAtPosition(i);
+
+                Log.e("inbox list view click=",i+ " ");
+
+                InboxRowRecord inboxRowRecord = rows.get(i);
+                passedIntent.putExtra("msg" , inboxRowRecord.txt);
+                passedIntent.putExtra("time", inboxRowRecord.time);
+                passedIntent.putExtra("sender", inboxRowRecord.sender);
+                passedIntent.putExtra("latti", inboxRowRecord.latti);
+                passedIntent.putExtra("longi", inboxRowRecord.longi);
+                con.startActivity(passedIntent);
+            }
+        });
 
     }
 
@@ -274,7 +271,7 @@ public class Inbox extends AppCompatActivity
                 startActivity(new Intent(this, Sent.class));
         } else if (id == R.id.inbox_nav_tools) {
 
-        } else if (id == R.id.home_nav_share) {
+        } else if (id == R.id.inbox_nav_share) {
 
             try {
                 Intent i = new Intent(Intent.ACTION_SEND);
@@ -288,7 +285,7 @@ public class Inbox extends AppCompatActivity
                 Log.e(TAG, "Error occurred in share");
             }
 
-        } else if (id == R.id.home_nav_feedback) {
+        } else if (id == R.id.inbox_nav_feedback) {
             startActivity(new Intent(this, Feedback.class));
         }
 

@@ -37,7 +37,7 @@ public class ReliabilityResponse extends AppCompatActivity {
 //    private final String sendreliableresconf = "https://jeeryweb.000webhostapp.com/ProjectLoc/acceptDenyReliability.php";
     private String username, phoneno;
     private TextView User, summary;
-    private EditText phno;
+    private TextView phno;
     private TextView recievedReqUser;
     private Button reliableDeny,reliableConf;
     private ProgressBar loadingSummaryprogressBar;
@@ -55,6 +55,7 @@ public class ReliabilityResponse extends AppCompatActivity {
 
         Intent intent = getIntent();
         username = intent.getStringExtra("RReqUsername");
+        phoneno = intent.getStringExtra("PhoneNo");
 
         Log.e("ReliabiltyResusername", username);
 
@@ -62,7 +63,7 @@ public class ReliabilityResponse extends AppCompatActivity {
         pp = (CircleImageView) findViewById(R.id.activity_reliabilityres_image);
         User = (TextView) findViewById(R.id.activity_reliabilityres_Username);
         summary = (TextView) findViewById(R.id.activity_reliabilityres_summary);
-        phno = (EditText) findViewById(R.id.activity_reliabilityres_phno);
+        phno = (TextView) findViewById(R.id.activity_reliabilityres_phno);
         recievedReqUser = (TextView) findViewById(R.id.activity_reliabilityres_txt1);
         reliableDeny = (Button) findViewById(R.id.activity_reliabilityres_btndeny);
         reliableConf = (Button) findViewById(R.id.activity_reliabilityres_btnconf);
@@ -76,8 +77,10 @@ public class ReliabilityResponse extends AppCompatActivity {
 
         User.setText(username);
 
-        if (sharedPrefHandler.getPhoneNo() != null)
-            phno.setVisibility(View.GONE);
+        if(phoneno != null)
+            phno.setText(phoneno);
+//        if (sharedPrefHandler.getPhoneNo() != null)
+//            phno.setVisibility(View.GONE);
 
         loadingSummaryprogressBar.setVisibility(View.VISIBLE);
 
@@ -114,9 +117,11 @@ public class ReliabilityResponse extends AppCompatActivity {
 
                     String PPlink = PPSum[0];
                     String Summary = PPSum[1];
+                    phoneno= PPSum[2];
 
                     new setPP(PPlink).execute();
 
+                    phno.setText(phoneno);
                     summary.setText(Summary);
                     loadingSummaryprogressBar.setVisibility(View.GONE);
 

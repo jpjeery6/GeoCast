@@ -27,4 +27,5 @@ public class APIEndPoint {
 
     static public final String msgAck = "http://geocast.in/msgAck.php?mode=android";
     static public final String getReliableConnections = "http://geocast.in/getReliableConnections.php?mode=android";
+    static public final String feedback = "http://geocast.in/feedback.php?mode=android";
 }

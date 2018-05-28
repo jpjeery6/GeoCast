@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sample="http://schemas.android.com/apk/res-auto">
 
 
     <CheckBoxPreference
@@ -11,14 +12,19 @@
         android:title="Broadcast to Reliable Users only"
         />
 
-    <SeekBarPreference
-        android:id="@+id/radius_slider"
-        android:key="radius_slider"
-        android:summary = "GeoCast broadcasts your message within a geo radius"
-        android:max="100"
-        android:title="Set Radius"
-        />
 
+    <com.pavelsikun.seekbarpreference.SeekBarPreference
+        android:key="radius_pref_key"
+        android:title="Set Radius"
+        android:summary="This will set your message Broadcast range"
+        android:enabled="true"
+        android:defaultValue="30"
+
+        sample:msbp_minValue="5"
+        sample:msbp_maxValue="50"
+        sample:msbp_interval="5"
+        sample:msbp_measurementUnit="Km"
+        sample:msbp_dialogEnabled="false"/>
 
 
 

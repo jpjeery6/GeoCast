@@ -44,6 +44,8 @@ public class SharedPrefHandler {
     public static final String GENDER = "Gender";
     public static final String PHONENO = "PhoneNo";
     public static final String PPPATH = "PPpath";
+    public  static final String RADIUS = "Radius";
+    public  static final String SENDTORELONLY = "SendToRelOnly";
 
 
 //Methods
@@ -126,6 +128,7 @@ public class SharedPrefHandler {
         editor.commit();
     }
 
+
     public String  getPPpath(){
         return pref.getString(PPPATH, null);
     }
@@ -163,6 +166,5 @@ public class SharedPrefHandler {
     {
         return pref.getString(PHONENO, null);
     }
-
 
 }

@@ -33,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,7 +147,9 @@ public class Sent extends AppCompatActivity
                                         rowobj.getString("time"),
                                         rowobj.getInt("msgNo")
                                         ));
+
                             }
+                            Collections.reverse(rows);
                             sentListviewAdapter.recordsInListview(con, recordsList,act , rows);
                         } catch (JSONException e) {
                             e.printStackTrace();

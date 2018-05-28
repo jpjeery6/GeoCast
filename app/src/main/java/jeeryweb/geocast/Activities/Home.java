@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -51,6 +52,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -91,32 +93,31 @@ import me.pushy.sdk.Pushy;
 
 public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
-//Attributes***************************************************************************************
-
+//Attributes**************************************************************************************************************
     public static String username, password;
-    private static Handler handler;
-    //TAG for Logging
-//    private final String updateLoc = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateLoc.php";
-//    private final String nearbyusers = "https://jeeryweb.000webhostapp.com/ProjectLoc/getUserLocationsRealTime.php";
-//    private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsgUsingPushy.php";
-//    private final String updateFcm = "https://jeeryweb.000webhostapp.com/ProjectLoc/updateFcm.php";
-//    private final String lgot = "https://jeeryweb.000webhostapp.com/ProjectLoc/logout.php";
-//    private final String pullMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/pullMsg.php";
+    public static  Location locationObj = null;
 
     //Variables
     private final String TAG = getClass().getSimpleName();
     public boolean internet = true;
     //to check if my activity is the current activity
     public boolean isInFront;
+    //to check if the app is run for the first time
+    private boolean firstTime;
+
     //user defined class objects
     APIEndPoint apiEndPoint;
     SharedPrefHandler sharedPrefHandler;
     Network network;
     PushyToken pushyTokenObj;
     FileHelper fileHelper;
+    //for volley
+    private RequestQueue requestQueue;
+
     NavigationView navigationView;
-    Context con;
+    public static Context con;
     Activity activity;
+
     Marker mCurrLocationMarker;
     Circle mcurrentCircle;
     List<Marker> nearbyMarkers;
@@ -124,21 +125,24 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     List<String> nearbyUsername;
     String fcmToken,pushyToken;
     String msg, result;
+
     //widgets
     View mapView;
     FloatingActionMenu sendMessageFab;
     com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
+    public static ProgressDialog dialog;
+
     //Objects
     private BroadcastReceiver receiver;
+
+
     // required for location purpose
-    private RequestQueue requestQueue;
     private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
-    private Location locationObj = null;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient mFusedLocationClient;
-    //it is an attribute
+    //it is like an attribute
     LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
@@ -157,7 +161,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 }
             }
         }
-
         @Override
         public void onLocationAvailability(LocationAvailability locationAvailability) {
             if (locationAvailability.isLocationAvailable()) {
@@ -173,11 +176,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         }
     };
-    //to check if the app is run for the first time
-    private boolean firstTime;
-    //on create ends here***************************************************************************
 
-    @SuppressLint({"MissingPermission", "HandlerLeak"})
+//Methods**************************************************************************************************************
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -190,7 +190,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         con = this;
         activity = this;
 
-
+        //setting up broadcast reciever for internet connection checking
         receiver = new BroadcastReceiver() {
             final Snackbar snackbar = Snackbar.make(findViewById(R.id.home_content_parent), "No Internet Connection", Snackbar.LENGTH_INDEFINITE);
 
@@ -229,7 +229,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
         navigationView = (NavigationView) findViewById(R.id.home_nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.home_nav_home);
@@ -243,19 +242,20 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         sharedPrefHandler = new SharedPrefHandler(this);
 
 
-        //logged in first time or not --required for fcm token sending........................................
+        //logged in first time or not --required for pushy token sending........................................
+        //we will get this intent from 1. login/register activity 2. Pushy reciever for shwing green marker in map
         Bundle bundle = getIntent().getExtras();
         Intent i = getIntent();
-
         if (bundle != null){
+            //1
             firstTime = bundle.getBoolean("firstTime");
+            //2
             if(i.hasExtra("helper")){
                String helper = bundle.getString("helper");
                Log.e(TAG, "Helper::: "+helper);
                Toast.makeText(con, "Helper:::::: "+helper, Toast.LENGTH_SHORT).show();
             }
         }
-
 
 
         //Retrieving username and password ..................................................................
@@ -265,7 +265,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         Log.e(TAG + " retrieved session:", username + "  " + password);
 
 
-        //if first time run firebase service and send token to server if not dont run.................................
+        //if first time run pushy service and send token to server if not dont run.................................
         if (firstTime) {
             Log.e(TAG, "first time yes");
             //create chat history saving file
@@ -292,8 +292,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
         //getting widgets........................................................................................
-
-
         //set username in navigation drawer
         TextView navUsername = (TextView) homeNavHeader.findViewById(R.id.home_nav_username);
         navUsername.setText(username.toUpperCase());
@@ -301,16 +299,13 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //setting up the map fragment view ...........................................................................
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-
-
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapView = mapFragment.getView();
 
+        //volley request queue
+        requestQueue = Volley.newRequestQueue(this);
 
         //setting listeners on buttons.............................................................................
-
-
-
         emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (internet) {
@@ -318,40 +313,63 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     //send in built message directly
                     msg = "Please help me please";
 
-                    //do this on a new thread
-                    new Thread(new Runnable() {
-                        public void run() {                                                 //THREAD 4.............
-                            // a potentially  time consuming task
-                            if (locationObj != null) {
-                                network = new Network(apiEndPoint.sendMsg, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
-                                result = network.DoWork();
-                                if (result != null && result.contains("sent")) {
-                                    //Log.e(TAG, "send message main thread" + result);
-                                    //pass this result to UI thread by writing a message to the UI's handler
-                                    Message m = Message.obtain();
-                                    Bundle bundle = new Bundle();
-                                    bundle.putString("result", result);
-                                    m.setData(bundle);
-                                    handler.sendMessage(m);
+                    dialog = new ProgressDialog(Home.this);
+                    dialog.setMessage("Sending Emergency Message");
+                    dialog.show();
+
+                    //send message using volley
+                    StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.sendMsg,
+                            new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    dialog.dismiss();
+                                    Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
                                 }
-                            }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }){
+                        @Override
+                        protected Map<String, String> getParams()
+                        {
+                            Map<String, String>  params = new HashMap<String, String>();
+                            params.put("Username", username);
+                            params.put("Password", password);
+                            params.put("Latitude", Double.toString(locationObj.getLatitude()));
+                            params.put("Longitude", Double.toString(locationObj.getLongitude()));
+                            params.put("Message", msg);
+
+                            return params;
                         }
-                    }).start();
+                    };
+
+                    requestQueue.add(stringRequest);
+
                     sendMessageFab.close(true);
                 }
             }
         });
+
         customMsgFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (internet) {
                     //TODO something when floating action menu second item clicked
-                    MessageInputDialog messageInputDialog = new MessageInputDialog();
+                    final MessageInputDialog messageInputDialog = new MessageInputDialog();
                     messageInputDialog.passFloatMenu(sendMessageFab);
                     messageInputDialog.show(getFragmentManager(), "customMsg");
+
+                    sendMessageFab.close(true);
+
                 }
             }
         });
+
         sendMessageFab.setClosedOnTouchOutside(true);
+
+
         //setting listner on nav header layout to go to MyProfile Activity
         navHeaderLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -365,7 +383,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         Log.e("Main2Activity Threads=", " " + Thread.activeCount());
 
 
-        requestQueue = Volley.newRequestQueue(this);
         //execution going to the callback
         mapFragment.getMapAsync(this);
 
@@ -382,44 +399,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         //done-------------------------------------------------------------------------------------
 
 
-        handler = new Handler(Looper.getMainLooper()) {
-            Object sendMsg, getRealTime;
 
-            @Override
-            public void handleMessage(Message msg) {
-                sendMsg = msg.getData().get("result");
-                if (sendMsg != null) {
-                    sendMsg.toString();
-                    Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
-                }
-
-//                getRealTime = msg.getData().get("resultRealTime");
-//                if (getRealTime != null) {
-//                    //extract nearby users
-//                    result = getRealTime.toString();
-//                    String[] nearby = result.split("nearby");
-//                    //Log.e("no of nearby users", String.valueOf(nearby.length));
-//                    nearbyLatlang = new ArrayList<>();
-//                    nearbyMarkers = new ArrayList<>();
-//                    nearbyUsername = new ArrayList<>();
-//                    for (int i = 1; i < nearby.length; i++)   //no of users nearby
-//                    {
-//                        //Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
-//                        String[] nearbylattlong = nearby[i].split("\\|");
-//                        //Log.e("location of 1 user", String.valueOf(nearbylattlong.length));
-//                        //Log.e("nearbylattlong",nearbylattlong[0]);
-//                        String nearUser = nearbylattlong[0];
-//                        String nearbylatt = nearbylattlong[1];
-//                        String nearbylong = nearbylattlong[2];         //each user's latt long
-//                        //create new marker
-//                        LatLng latLng = new LatLng(Double.valueOf(nearbylatt), Double.valueOf(nearbylong));
-//                        nearbyLatlang.add(i - 1, latLng);
-//                        nearbyUsername.add(i - 1, nearUser);
-//                    }
-//                    //Log.e("nearby users", String.valueOf(nearby.length));
-//                }
-            }
-        };
     }
 
     @SuppressLint("MissingPermission")
@@ -668,7 +648,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 }
             }
             //move map camera
-            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
 
         }
         /*

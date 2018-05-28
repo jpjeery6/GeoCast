@@ -6,6 +6,11 @@
     <color name="primaryLightColor">#6ec6ff</color>
 
     <color name="textColorPrimary">#000000</color>
+    <color name="colorBlack">#000000</color>
+    <color name="colorBlack2">#191919</color>
+    <color name="colorBlack3">#323232</color>
+    <color name="colorBlack4">#4c4c4c</color>
+
     <color name="colorWhite">#FFFFFF</color>
 
     <color name="colorAccent">#2196f3</color>

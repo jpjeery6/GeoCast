@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="true"
+        jar="/home/jeery/.gradle/caches/transforms-1/files-1.1/volley-1.1.0.aar/a51fb3e147e0fce6329105f0387c1944/jars/classes.jar"
+        jumboMode="false"
+        min-sdk-version="21"
+        optimize="true"
+        revision="26.0.2"
+        sha1="9bdfc3e83c6bc1f8bc5807cdaf7e94ac884a2a0d">
+        <dex dex="/home/jeery/StudioProjects/GeoCast/app/build/intermediates/transforms/preDex/release/70/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/home/jeery/.gradle/caches/transforms-1/files-1.1/preference-v7-23.4.0.aar/80298dda9a65b44496a6c38d974091a9/jars/classes.jar"
+        jumboMode="false"
+        min-sdk-version="21"
+        optimize="true"
+        revision="26.0.2"
+        sha1="b954d8588de65c67c1ec482678620845bbb5f737">
+        <dex dex="/home/jeery/StudioProjects/GeoCast/app/build/intermediates/transforms/preDex/release/7/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/home/jeery/.gradle/caches/modules-2/files-2.1/me.pushy/sdk/1.0.32/b99f5aed2c1f93c7ab9b432d24ea6c7e818e4a87/sdk-1.0.32.jar"
+        jumboMode="false"
+        min-sdk-version="21"
+        optimize="true"
+        revision="26.0.2"
+        sha1="b99f5aed2c1f93c7ab9b432d24ea6c7e818e4a87">
+        <dex dex="/home/jeery/StudioProjects/GeoCast/app/build/intermediates/transforms/preDex/release/69/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/home/jeery/.gradle/caches/transforms-1/files-1.1/material-seekbar-preference-2.3.0.aar/31878584e0c3a7a92d8ffae1d45c8e25/jars/classes.jar"
+        jumboMode="false"
+        min-sdk-version="21"
+        optimize="true"
+        revision="26.0.2"
+        sha1="e690682fbef5cfcc6676b602bc1321e347e74610">
+        <dex dex="/home/jeery/StudioProjects/GeoCast/app/build/intermediates/transforms/preDex/release/6/classes.dex" />
+    </item>
+
+</items>

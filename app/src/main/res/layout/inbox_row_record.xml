@@ -18,7 +18,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/Name"
-            android:textColor="@color/colorDeepPurple"
+            android:text="name"
+            android:textColor="@color/colorBlack2"
             android:layout_marginTop="5dp"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
@@ -30,6 +31,7 @@
 
         <TextView
             android:layout_marginTop="5dp"
+            android:text="messsgae"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:ellipsize="end"
@@ -38,29 +40,22 @@
             android:layout_width="180dp"
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/profile_image"
-            android:textColor="@color/colorMaterialGreen"
+            android:textColor="@color/colorBlack3"
             android:id="@+id/message_txt"
             android:layout_below="@+id/Name"
             />
-        <ImageButton
-            android:layout_margin="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/display_loc"
-            android:src="@drawable/ic_location_pin"
-            android:background="@color/colorBackground"
-            android:layout_alignParentRight="true"
-            />
+
         <TextView
             android:textSize="8sp"
-            android:textColor="@color/colorAccent"
+            android:text="time"
+            android:textColor="@color/colorBlack4"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:layout_marginBottom="20dp"
             android:layout_width="wrap_content"
             android:id="@+id/time_last"
+            android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
-            android:layout_below="@+id/display_loc"
             android:layout_height="wrap_content" />
 
     </RelativeLayout>

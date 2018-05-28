@@ -88,6 +88,10 @@ public class ReliabilitiesListviewAdapter {
             else rowRecordBinding.backRow.setBackgroundColor(Color.GRAY);
             */
             reliabilitiesRowRecordBinding.Name.setText(reliabilitiesRowRecord.sender);
+            if(reliabilitiesRowRecord.relUpDown)
+                reliabilitiesRowRecordBinding.upDownArrow.setImageResource(R.drawable.ic_call_made_black_24dp);
+            else
+                reliabilitiesRowRecordBinding.upDownArrow.setImageResource(R.drawable.ic_call_received_black_24dp);
             String urlPic = reliabilitiesRowRecord.picture;
             int userID = reliabilitiesRowRecord.userID;
 
@@ -105,28 +109,13 @@ public class ReliabilitiesListviewAdapter {
                 rq.add(ir);
             }
 
-            reliabilitiesRowRecordBinding.displayLoc.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //open new fragment without nav bar
-                    //show location of origin of message
-                    //and path from current location to destination
-                    Log.e("Reliabilities", "Clicked in adapter");
-
-                    if(reliabilitiesRowRecord.type==0){
-                        Intent i = new Intent(con, ReliabilityResponse.class);
-                        i.putExtra("RReqUsername",reliabilitiesRowRecord.sender);
-                        con.startActivity(i);
-                    }
-                    else if(reliabilitiesRowRecord.type==1){
-                        Intent i = new Intent(con, UserProfileView.class);
-                        i.putExtra("userID", reliabilitiesRowRecord.userID);
-                        i.putExtra("Username", reliabilitiesRowRecord.sender);
-                        con.startActivity(i);
-                    }
-
-                }
-            });
+//            reliabilitiesRowRecordBinding.displayLoc.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//
+//
+//                }
+//            });
 
             return reliabilitiesRowRecordBinding.getRoot();
         }

@@ -23,6 +23,7 @@ public class PushyReceiver extends BroadcastReceiver {
         String notificationTitle = null;
         String clickParameter = null;
         String msgTime = "2018-05-08 09:00:00 pm";
+        String relPhoneNo= "dummy";
         String msgLatt = "26.98";
         String msgLon = "93.8";
         String notificationText = "Test body";
@@ -38,6 +39,9 @@ public class PushyReceiver extends BroadcastReceiver {
         // Attempt to extract the "message" property from the payload: {"message":"Hello World!"}
         if (intent.getStringExtra("message") != null) {
             notificationText = intent.getStringExtra("message");
+        }
+        if (intent.getStringExtra("phoneno") != null) {
+            relPhoneNo = intent.getStringExtra("phoneno");
         }
         if(intent.getStringExtra("time") == null)
             Log.e("Pushy Reciever","time null");
@@ -85,6 +89,14 @@ public class PushyReceiver extends BroadcastReceiver {
             Log.e("puhy messgae rec","type rel req");
             intentAct  = new Intent(context,ReliabilityResponse.class);
             intentAct.putExtra("RReqUsername",notificationTitle);
+            intentAct.putExtra("PhoneNo",relPhoneNo);
+        }
+        else if(clickParameter.contains("relhome"))
+        {
+            Log.e("puhy messgae rec","type home");
+            intentAct  = new Intent(context,Home.class);
+            //intentAct.putExtra("RReqUsername",notificationTitle);
+            //intentAct.putExtra("PhoneNo",relPhoneNo);
         }
 
         else if(clickParameter.contains("reqrep"))

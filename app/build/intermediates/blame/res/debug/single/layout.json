@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeDebugResources/stripped.dir/layout/activity_inbox.xml",
+        "source": "/home/jeery/StudioProjects/GeoCast/app/src/main/res/layout/activity_inbox.xml"
+    },
+    {
+        "merged": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeDebugResources/stripped.dir/layout/activity_sent.xml",
+        "source": "/home/jeery/StudioProjects/GeoCast/app/src/main/res/layout/activity_sent.xml"
+    },
+    {
+        "merged": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeDebugResources/stripped.dir/layout/sent_row_record.xml",
+        "source": "/home/jeery/StudioProjects/GeoCast/app/src/main/res/layout/sent_row_record.xml"
+    },
+    {
+        "merged": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeDebugResources/stripped.dir/layout/inbox_row_record.xml",
+        "source": "/home/jeery/StudioProjects/GeoCast/app/src/main/res/layout/inbox_row_record.xml"
+    },
+    {
+        "merged": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeDebugResources/stripped.dir/layout/reliabilities_row_record.xml",
+        "source": "/home/jeery/StudioProjects/GeoCast/app/src/main/res/layout/reliabilities_row_record.xml"
+    }
+]

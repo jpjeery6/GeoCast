@@ -2,10 +2,13 @@ package jeeryweb.geocast.Activities;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.SeekBar;
+import android.util.Log;
+
 
 import jeeryweb.geocast.Fragments.SettingsFragment;
 import jeeryweb.geocast.R;
@@ -23,8 +26,6 @@ import jeeryweb.geocast.R;
  */
 public class Settings extends AppCompatActivity {
 
-    private SeekBar seekBar;
-    private int seektime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,35 +46,15 @@ public class Settings extends AppCompatActivity {
             fragment = getFragmentManager().findFragmentByTag("settings_fragment");
         }
 
-        seekBar = (SeekBar)findViewById(R.id.radius_slider);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        int setRadius = sharedPref.getInt(SettingsFragment.KEY_RADIUS, 0);
+        boolean setSendToRelOnlySett = sharedPref.getBoolean(SettingsFragment.KEY_SEND_TO_REL_SETT, false);
 
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        Log.e("settings radius = " , setRadius + " ");
+        Log.e("settings on off = " , setSendToRelOnlySett +" ");
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
 
-            }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress,
-                                          boolean fromUser) {
-
-//                int MIN = 5;
-//                if (progress < MIN) {
-//
-//                    //value.setText(" Time Interval (" + seektime + " sec)");
-//                } else {
-//                    seektime = progress;
-//                }
-//                value.setText(" Time Interval (" + seektime + " sec)");
-
-            }
-        });
 
 
     }

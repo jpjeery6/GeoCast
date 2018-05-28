@@ -1,5 +1,6 @@
 package jeeryweb.geocast.Activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -44,6 +45,7 @@ public class ReliabilityRequest extends AppCompatActivity {
     APIEndPoint apiEndPoint;
     private Network network;
     private String result;
+    private ProgressDialog progressDialog;
     //private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsg.php";
 
     @Override
@@ -68,8 +70,11 @@ public class ReliabilityRequest extends AppCompatActivity {
 
         User.setText(username);
 
-        if (sharedPrefHandler.getPhoneNo() != null)
+        if (sharedPrefHandler.getPhoneNo() != null) {
+            phoneno = sharedPrefHandler.getPhoneNo();
             phno.setVisibility(View.GONE);
+        }
+
 
         loadingSummaryprogressBar.setVisibility(View.VISIBLE);
 
@@ -116,10 +121,15 @@ public class ReliabilityRequest extends AppCompatActivity {
 
                 reliableReq = msg.getData().get("sendRRresult");
                 if (reliableReq != null) {
+                    progressDialog.dismiss();
                     //extract nearby users
                     splitter = reliableReq.toString();
-                    if (splitter.contains("error"))
+                    if (splitter.contains("already"))
+                        Toast.makeText(getApplicationContext(), "Reliability Req Already sent", Toast.LENGTH_SHORT).show();
+                    else if (splitter.contains("error"))
                         Toast.makeText(getApplicationContext(), "Can't send reliability request right now", Toast.LENGTH_SHORT).show();
+                    else if (splitter.contains("xyz"))
+                        Toast.makeText(getApplicationContext(), "Already a Reliable Connection", Toast.LENGTH_SHORT).show();
                     else
                         Toast.makeText(getApplicationContext(), "Reliability request send", Toast.LENGTH_SHORT).show();
                 }
@@ -131,8 +141,12 @@ public class ReliabilityRequest extends AppCompatActivity {
         reliableYes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                phoneno = phno.getText().toString();
-                if (true) {
+
+                if (checkPhoneNumberValid()) {
+                    progressDialog = new ProgressDialog(ReliabilityRequest.this);
+                    progressDialog.setMessage("Sending  Reliability Request");
+                    progressDialog.show();
+
                     //checkPhoneNumberValid()
                     //start new thraed to send a message notification to the user
                     //get the firebase token of the user
@@ -167,7 +181,11 @@ public class ReliabilityRequest extends AppCompatActivity {
 
     private boolean checkPhoneNumberValid() {
         boolean valid = true;
-        String p = phno.getText().toString();
+        String p = sharedPrefHandler.getPhoneNo();
+        if(p==null) {
+            p = phno.getText().toString();
+            phoneno = p;
+        }
         Log.e("phno input", p + "len=" + String.valueOf(p.length()));
         if (p.length() != 10 || p.length() == 0) {
             phno.setError("Invalid phone number");
@@ -175,6 +193,8 @@ public class ReliabilityRequest extends AppCompatActivity {
         } else {
             phno.setError(null);
         }
+        if(p.length() ==14)
+            valid = true;
 
 
         return valid;
