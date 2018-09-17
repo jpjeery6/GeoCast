@@ -1,39 +1,33 @@
 package jeeryweb.geocast.Activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PorterDuff;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EdgeEffect;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.model.LatLng;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.Network;
-import jeeryweb.geocast.Utility.PPUpload;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class Reliability extends AppCompatActivity {
@@ -57,7 +51,7 @@ public class Reliability extends AppCompatActivity {
     //private final String sendMsg = "https://jeeryweb.000webhostapp.com/ProjectLoc/uploadMsg.php";
 
 
-
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,15 +62,42 @@ public class Reliability extends AppCompatActivity {
         Log.e("Reliabilty_username",username);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        pp = (CircleImageView) findViewById(R.id.activity_reliability_image);
-        User = (TextView)findViewById(R.id.activity_reliability_Username);
-        summary = (TextView)findViewById(R.id.activity_reliability_summary);
-        phno = (EditText)findViewById(R.id.activity_reliability_phno);
-        reliableYes = (ImageButton)findViewById(R.id.activity_reliability_button);
-        loadingSummaryprogressBar = (ProgressBar) findViewById(R.id.activity_reliability_progressbar);
+        pp = findViewById(R.id.activity_reliability_image);
+        User = findViewById(R.id.activity_reliability_Username);
+        summary = findViewById(R.id.activity_reliability_summary);
+        phno = findViewById(R.id.activity_reliability_phno);
+        reliableYes = findViewById(R.id.activity_reliability_button);
+        loadingSummaryprogressBar = findViewById(R.id.activity_reliability_progressbar);
 
         sharedPrefHandler = new SharedPrefHandler(this);
 
+
+        //press feedback on image button
+        reliableYes.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        ImageButton view = (ImageButton) v;
+                        view.getBackground().setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP);
+                        v.invalidate();
+                        break;
+                    }
+                    case MotionEvent.ACTION_UP:
+
+                        // Your action here on button click
+
+                    case MotionEvent.ACTION_CANCEL: {
+                        ImageButton view = (ImageButton) v;
+                        view.getBackground().clearColorFilter();
+                        view.invalidate();
+                        break;
+                    }
+                }
+                return true;
+            }
+        });
 
 
         User.setText(username);
@@ -91,17 +112,17 @@ public class Reliability extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {                                                 //THREAD 4.............
                 // a potentially  time consuming task
-                    network = new Network(getPPSummary, username, "kkk","kkk" , "kk", "kk", "ksdhfj", null, null, null, null);
-                    result = network.DoWork();
-                    if (result != null) {
-                        Log.e("get PP abd summary",result);
-                        //pass this result to UI thread by writing a message to the UI's handler
-                        Message m = Message.obtain();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("resultPPSummary", result);
-                        m.setData(bundle);
-                        handler.sendMessage(m);
-                    }
+                network = new Network(getPPSummary, username, "kkk","kkk" , "kk", "kk", "ksdhfj", null, null, null, null);
+                result = network.DoWork();
+                if (result != null) {
+                    Log.e("get PP abd summary",result);
+                    //pass this result to UI thread by writing a message to the UI's handler
+                    Message m = Message.obtain();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("resultPPSummary", result);
+                    m.setData(bundle);
+                    handler.sendMessage(m);
+                }
 
             }
         }).start();
@@ -109,6 +130,7 @@ public class Reliability extends AppCompatActivity {
         handler = new Handler(Looper.getMainLooper()){
             Object PPSummary,reliableReq;
             String splitter;
+
             @Override
             public void handleMessage(Message msg) {
                 PPSummary = msg.getData().get("resultPPSummary");
@@ -139,14 +161,12 @@ public class Reliability extends AppCompatActivity {
         };
 
 
-
         //done-----------
         reliableYes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 phoneno = phno.getText().toString();
-                if(checkPhoneNumberValid())
-                {
+                if(checkPhoneNumberValid()) {
                     //start new thraed to send a message notification to the user
                     //get the firebase token of the user
                     //send a req to firebase server to push a message

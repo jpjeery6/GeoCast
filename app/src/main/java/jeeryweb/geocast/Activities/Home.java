@@ -1,50 +1,36 @@
 package jeeryweb.geocast.Activities;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-
 import android.content.IntentFilter;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.location.LocationListener;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-
-import android.provider.*;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
-
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import android.content.Context;
-import android.location.Location;
-import android.os.Handler;
-
-import android.view.ViewGroup;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -53,7 +39,6 @@ import android.widget.Toast;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -71,37 +56,29 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
 import jeeryweb.geocast.FirebaseServices.FirebaseRegistrationIntentService;
+import jeeryweb.geocast.R;
 import jeeryweb.geocast.Services.LocationUpdaterService;
 import jeeryweb.geocast.Utility.FileHelper;
 import jeeryweb.geocast.Utility.Network;
-
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 /**
  * This class 1.sends the FCM token to the server if running --for the first time-- in a separate thread
- *            2.uploads the last known location in a separate thread
- *            3.sends the message if send button clicked on a separate thread
- *
- *            4.Running a FirebaseRegisterIntentService for getting the token for the first time
- *            5.starting the LocationUpdater Service
- *            6.Starting the MessageRecieverService
- *
+ * 2.uploads the last known location in a separate thread
+ * 3.sends the message if send button clicked on a separate thread
+ * <p>
+ * 4.Running a FirebaseRegisterIntentService for getting the token for the first time
+ * 5.starting the LocationUpdater Service
+ * 6.Starting the MessageRecieverService
  */
-
-import jeeryweb.geocast.R;
-import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class Home extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
@@ -171,7 +148,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         con = this;
@@ -207,9 +184,9 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
         //getting widgets
-        sendMessageFab = (FloatingActionMenu) findViewById(R.id.sendmsg_floating_menu);
-        emergencyMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.emergencymsgfab);
-        customMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.custommsgfab);
+        sendMessageFab = findViewById(R.id.sendmsg_floating_menu);
+        emergencyMsgFab = findViewById(R.id.emergencymsgfab);
+        customMsgFab = findViewById(R.id.custommsgfab);
 
 
         emergencyMsgFab.setOnClickListener(new View.OnClickListener() {
@@ -256,19 +233,19 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
         //navigation bar
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView = (NavigationView) findViewById(R.id.home_nav_view);
+        navigationView = findViewById(R.id.home_nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.home_nav_home);
 
         //getting navbar header items- image , name ,welcome
         View homeNavHeader = navigationView.getHeaderView(0);
-        LinearLayout navHeaderLayout = (LinearLayout) homeNavHeader.findViewById(R.id.home_nav_layout);
+        LinearLayout navHeaderLayout = homeNavHeader.findViewById(R.id.home_nav_layout);
 
 
 
@@ -324,7 +301,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
         //set username in navigation drawer
-        TextView navUsername = (TextView) homeNavHeader.findViewById(R.id.home_nav_username);
+        TextView navUsername = homeNavHeader.findViewById(R.id.home_nav_username);
         navUsername.setText(username.toUpperCase());
 
 
@@ -359,7 +336,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             public void run() {
                 getRealTimeLocations();
                 homeLocationSuccessDoWork();
-                mapView.postDelayed(this,30000);
+                mapView.postDelayed(this, 10000);
             }
         });
 
@@ -871,7 +848,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         }
@@ -1010,7 +987,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
