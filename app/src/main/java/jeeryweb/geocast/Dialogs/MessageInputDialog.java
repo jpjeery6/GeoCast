@@ -7,12 +7,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -22,16 +19,19 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import jeeryweb.geocast.Activities.Home;
+import jeeryweb.geocast.Activities.Settings;
 import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
-import jeeryweb.geocast.Utility.Network;
+import jeeryweb.geocast.Utility.HomeActivityUtil;
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 /**
  * Created by Jeery on 18-03-2018.
@@ -39,11 +39,18 @@ import jeeryweb.geocast.Utility.Network;
 
 public class MessageInputDialog extends DialogFragment {
 
+
     FloatingActionMenu floatingActionMenu;
     EditText customMessageBody;
     public static String message_body;
     private RequestQueue requestQueue;
+    private Settings geoCastSettings;
+    Context con;
 
+    SharedPrefHandler sharedPrefHandler;
+    HomeActivityUtil homeActivityUtil;   //conatins methods for managing live users
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
     public void passFloatMenu(FloatingActionMenu floatingActionMenu)
     {
         this.floatingActionMenu= floatingActionMenu;
@@ -53,9 +60,11 @@ public class MessageInputDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         // Get the layout inflater
+        geoCastSettings = new Settings();
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        Context con  = getActivity().getApplicationContext();
-
+        con = getActivity().getApplicationContext();
+        sharedPrefHandler = new SharedPrefHandler(con);
+        homeActivityUtil = new HomeActivityUtil(con);
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         final View view = inflater.inflate(R.layout.custom_message_input_dialog, null);
@@ -83,12 +92,14 @@ public class MessageInputDialog extends DialogFragment {
                                     @Override
                                     public void onResponse(String response) {
                                         Home.dialog.dismiss();
+                                        homeActivityUtil.resetHelpingUsersInfo();
                                         Toast.makeText(Home.con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
                                     }
                                 },
                                 new Response.ErrorListener() {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
+                                        Home.dialog.dismiss();
                                         Toast.makeText(Home.con, error.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }){
@@ -100,7 +111,10 @@ public class MessageInputDialog extends DialogFragment {
                                 params.put("Password", Home.password);
                                 params.put("Latitude", Double.toString(Home.locationObj.getLatitude()));
                                 params.put("Longitude", Double.toString(Home.locationObj.getLongitude()));
-                                params.put("Longitude", message_body);
+                                params.put("Message", message_body);
+                                params.put("Timestamp", HomeActivityUtil.fixDateFormat(dateFormat.format(new Date())));
+                                params.put("Radius", geoCastSettings.getRadiusSetting(con));
+                                params.put("Reliable", geoCastSettings.getReliableSetting(con));
 
                                 return params;
                             }

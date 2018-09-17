@@ -5,9 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -20,7 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -35,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,32 +69,25 @@ public class Inbox extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inbox);
         sharedPrefHandler = new SharedPrefHandler(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView = (NavigationView) findViewById(R.id.inbox_nav_view);
+        navigationView = findViewById(R.id.inbox_nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.inbox_nav_inbox);
 
 
         //getting navbar header items- image , name ,welcome
         View inboxNavHeader = navigationView.getHeaderView(0);
-        LinearLayout navHeaderLayout = (LinearLayout) inboxNavHeader.findViewById(R.id.inbox_nav_layout);
+        LinearLayout navHeaderLayout = inboxNavHeader.findViewById(R.id.inbox_nav_layout);
+
         //setting listner on nav header layout to go to MyProfile Activity
         navHeaderLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,11 +99,11 @@ public class Inbox extends AppCompatActivity
         });
 
         //set username in navigation drawer
-        //TextView navUsername = (TextView) navHeaderView.findViewById(R.id.nav_username);
-        //navUsername.setText(username.toUpperCase());
+        TextView navUsername = inboxNavHeader.findViewById(R.id.inbox_nav_username);
+        navUsername.setText(Home.username.toUpperCase());
 
         //getting widgets
-        recordsList = (ListView) findViewById(R.id.chatList);
+        recordsList = findViewById(R.id.chatList);
         con = this;
         act = this;
 
@@ -136,7 +128,7 @@ public class Inbox extends AppCompatActivity
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.getAllMessages,
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.getAllMessages,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -149,7 +141,7 @@ public class Inbox extends AppCompatActivity
                               }
 
                               JSONArray objArray = obj.getJSONArray("message");
-
+                                Log.e("Inboxdebug", String.valueOf(objArray));
                               Log.e(TAG, String.valueOf(objArray));
                               for (int i = 0; i < objArray.length(); i++) {
                                     JSONObject rowobj = objArray.getJSONObject(i);
@@ -163,6 +155,8 @@ public class Inbox extends AppCompatActivity
                                             rowobj.getString("profilePic")));
                                 }
                                 //giving the list to an adapter
+                                Log.e("Inboxdebug", "size is " + rows.size());
+                                Collections.reverse(rows);
                                 inboxListviewAdapter.recordsInListview(con, recordsList,act , rows);
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -216,8 +210,14 @@ public class Inbox extends AppCompatActivity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        navigationView.setCheckedItem(R.id.inbox_nav_inbox);
+    }
+
+    @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -241,6 +241,9 @@ public class Inbox extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent i = new Intent(con, jeeryweb.geocast.Activities.Settings.class);
+            con.startActivity(i);
+
             return true;
         }
 
@@ -258,9 +261,10 @@ public class Inbox extends AppCompatActivity
             //go to home activity
             //NavUtils.navigateUpFromSameTask(this);
 
-            //Intent i = new Intent(con, Home.class);
-            //con.startActivity(i);
-            super.onBackPressed();
+            Intent i = new Intent(con, Home.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            con.startActivity(i);
+            //super.onBackPressed();
             finish();
 
 
@@ -268,8 +272,14 @@ public class Inbox extends AppCompatActivity
 
 
         } else if (id == R.id.inbox_nav_sent) {
-                startActivity(new Intent(this, Sent.class));
-        } else if (id == R.id.inbox_nav_tools) {
+            Intent i = new Intent(this, Sent.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            con.startActivity(i);
+
+        } else if (id == R.id.inbox_nav_reliabilties) {
+
+            Intent i = new Intent(con, Reliabilities.class);
+            con.startActivity(i);
 
         } else if (id == R.id.inbox_nav_share) {
 
@@ -289,7 +299,7 @@ public class Inbox extends AppCompatActivity
             startActivity(new Intent(this, Feedback.class));
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

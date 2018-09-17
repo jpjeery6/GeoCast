@@ -14,11 +14,16 @@ import android.util.Log;
 import jeeryweb.geocast.Activities.Home;
 import jeeryweb.geocast.Activities.MessageExpanded;
 import jeeryweb.geocast.Activities.ReliabilityResponse;
+import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class PushyReceiver extends BroadcastReceiver {
+
+    SharedPrefHandler sharedPrefHandler;
     @Override
     public void onReceive(Context context, Intent intent) {
 
+        sharedPrefHandler = new SharedPrefHandler(context);
         Log.e("pushy rec","something is recieved fron puahy");
         String notificationTitle = null;
         String clickParameter = null;
@@ -66,7 +71,7 @@ public class PushyReceiver extends BroadcastReceiver {
 
         // Prepare a notification with vibration, sound and lights
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(notificationTitle)
                 .setContentText(notificationText)
                 //.setAutoCancel(true)
@@ -83,6 +88,7 @@ public class PushyReceiver extends BroadcastReceiver {
             intentAct.putExtra("time",msgTime );
             intentAct.putExtra("latti",msgLatt );
             intentAct.putExtra("longi",msgLon );
+            Log.e("Home", msgTime);
         }
         else if(clickParameter.contains("rel"))
         {
@@ -108,7 +114,10 @@ public class PushyReceiver extends BroadcastReceiver {
         else if(clickParameter.contains("ack")){
             Log.e("puhy messgae rec","type recep from message acknoledgement");
             intentAct  = new Intent(context,Home.class);
+            sharedPrefHandler.saveHelpingUser(notificationTitle);
             intentAct.putExtra("helper", notificationTitle);
+            intentAct.putExtra("lattihelper", msgLatt);
+            intentAct.putExtra("longihelper", msgLon);
             Log.e("puhy messgae rec", "helper is ready "+ notificationText);
         }
 
@@ -122,7 +131,7 @@ public class PushyReceiver extends BroadcastReceiver {
         builder.setAutoCancel(true);
 
         // Get an instance of the NotificationManager service
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Build the notification and display it
         notificationManager.notify(1, builder.build());

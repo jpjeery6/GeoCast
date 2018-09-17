@@ -22,6 +22,21 @@
 
     <include layout="@layout/content_home" />
 
+    <TextView
+        android:id="@+id/nearbyUersInfo"
+
+
+        android:background="#07000000"
+        android:textColor="@color/colorWhite"
+        android:textSize="16sp"
+        android:layout_marginTop="60dp"
+        android:text="show on home"
+        android:layout_marginLeft="15dp"
+        android:layout_marginBottom="25dp"
+        android:layout_gravity="center|top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 
 
     <com.github.clans.fab.FloatingActionMenu

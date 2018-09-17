@@ -10,86 +10,90 @@
         android:id="@+id/sibling"
         android:orientation="vertical"
         android:layout_gravity="center"
-        android:layout_marginTop="36dp">
-        <LinearLayout
-            android:orientation="horizontal"
-            android:paddingLeft="25dp"
+        android:layout_marginTop="36dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        >
+
+
+
+        <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_profession"/>
-            <EditText
-                android:id="@+id/activity_myprofile_profession"
-                android:layout_gravity="center_vertical"
-                android:layout_width="match_parent"
-                android:layout_marginRight="20dp"
-                android:textSize="16sp"
-                android:layout_height="wrap_content"
-                android:paddingLeft="20dp"
-                android:text="Student"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_marginTop="25dp"
-            android:orientation="horizontal"
-            android:paddingLeft="25dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_gender"/>
-            <EditText
-                android:id="@+id/activity_myprofile_gender"
-                android:layout_gravity="center_vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingLeft="20dp"
-                android:textSize="16sp"
-                android:layout_marginRight="20dp"
-                android:text="Male"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_marginTop="25dp"
-            android:orientation="horizontal"
-            android:paddingLeft="25dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_age"/>
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme">
+
             <EditText
                 android:id="@+id/activity_myprofile_age"
-                android:layout_gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="20dp"
-                android:paddingLeft="20dp"
-                android:textSize="16sp"
-                android:text="22"/>
-        </LinearLayout>
+                android:ems="10"
+                android:hint="Your Age"
+                android:inputType="number" />
+        </android.support.design.widget.TextInputLayout>
+
         <LinearLayout
-            android:layout_marginTop="25dp"
-            android:orientation="horizontal"
-            android:paddingLeft="25dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:src="@drawable/ic_phone"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dp"
+                android:text="Gender:"
+                android:textSize="18dip" />
+
+            <RadioGroup
+                android:id="@+id/activity_myprofile_gender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/radioMale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Male" />
+
+                <RadioButton
+                    android:id="@+id/radioFemale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Female" />
+
+            </RadioGroup>
+
+        </LinearLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme">
+
             <EditText
-                android:textSize="16sp"
-                android:id="@+id/activity_myprofile_phno"
-                android:layout_gravity="center_vertical"
+                android:id="@+id/activity_myprofile_profession"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:text="+91 8767676878"/>
-        </LinearLayout>
+                android:hint="Your occupation"
+                android:inputType="textPersonName" />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme">
+
+            <EditText
+                android:id="@+id/activity_myprofile_phno"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Phone number(optional)"
+                android:inputType="number" />
+        </android.support.design.widget.TextInputLayout>
+
     </LinearLayout>
 
     <TextView

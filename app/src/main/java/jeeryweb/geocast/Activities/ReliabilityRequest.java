@@ -58,19 +58,20 @@ public class ReliabilityRequest extends AppCompatActivity {
         Log.e("ReliabiltyRequsername", username);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        pp = (CircleImageView) findViewById(R.id.activity_reliabilityreq_image);
-        User = (TextView) findViewById(R.id.activity_reliabilityreq_Username);
-        summary = (TextView) findViewById(R.id.activity_reliabilityreq_summary);
-        phno = (EditText) findViewById(R.id.activity_reliabilityreq_phno);
-        reliableYes = (ImageButton) findViewById(R.id.activity_reliabilityreq_button);
-        loadingSummaryprogressBar = (ProgressBar) findViewById(R.id.activity_reliabilityreq_progressbar);
+        pp = findViewById(R.id.activity_reliabilityreq_image);
+        User = findViewById(R.id.activity_reliabilityreq_Username);
+        summary = findViewById(R.id.activity_reliabilityreq_summary);
+        phno = findViewById(R.id.activity_reliabilityreq_phno);
+        reliableYes = findViewById(R.id.activity_reliabilityreq_button);
+        loadingSummaryprogressBar = findViewById(R.id.activity_reliabilityreq_progressbar);
 
         sharedPrefHandler = new SharedPrefHandler(this);
 
 
         User.setText(username);
 
-        if (sharedPrefHandler.getPhoneNo() != null) {
+        if (sharedPrefHandler.getPhoneNo() != null && !sharedPrefHandler.getPhoneNo().contentEquals("NA")) {
+            Log.e("Happening ", "=" + sharedPrefHandler.getPhoneNo());
             phoneno = sharedPrefHandler.getPhoneNo();
             phno.setVisibility(View.GONE);
         }
@@ -83,7 +84,7 @@ public class ReliabilityRequest extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {                                                 //THREAD 4.............
                 // a potentially  time consuming task
-                network = new Network(apiEndPoint.getPPSummary, username, "kkk", "kkk", "kk", "kk", "ksdhfj", null, null, null, null);
+                network = new Network(APIEndPoint.getPPSummary, username, "kkk", "kkk", "kk", "kk", "ksdhfj", null, null, null, null);
                 result = network.DoWork();
                 if (result != null) {
                     Log.e("get PP abd summary", result);
@@ -111,10 +112,24 @@ public class ReliabilityRequest extends AppCompatActivity {
 
                     String PPlink = PPSum[0];
                     String Summary = PPSum[1];
+                    String responseTime = PPSum[2];
+
+                    if (Double.parseDouble(responseTime) == -1)
+                        responseTime = "Not responded to a message yet";
+                    else
+                        responseTime = responseTime + "s";
 
                     new setPP(PPlink).execute();
 
-                    summary.setText(Summary);
+                    //format the summary
+                    String[] summarysplitter = Summary.split("\\|");
+                    String age = summarysplitter[0];
+                    String profession = summarysplitter[1];
+                    String gender = summarysplitter[2];
+                    // String noConnections = summarysplitter[3];
+                    summary.setText("Age: " + age + "\n" + "Profession: " + profession + "\n" + "Gender: " + gender + "\n" + "Avg Response Time: " + responseTime);
+
+
                     loadingSummaryprogressBar.setVisibility(View.GONE);
 
                 }
@@ -156,7 +171,7 @@ public class ReliabilityRequest extends AppCompatActivity {
                     new Thread(new Runnable() {
                         public void run() {                                                 //THREAD 4.............
                             // a potentially  time consuming task
-                            network = new Network(apiEndPoint.sendreliable, Home.username, username, phoneno, "kk", "kk", "ksdhfj", null, null, null, null);
+                            network = new Network(APIEndPoint.sendreliable, Home.username, username, phoneno, "kk", "kk", "ksdhfj", null, null, null, null);
                             result = network.DoWork();
                             if (result != null) {
                                 Log.e("send reliability req", result);
@@ -182,7 +197,7 @@ public class ReliabilityRequest extends AppCompatActivity {
     private boolean checkPhoneNumberValid() {
         boolean valid = true;
         String p = sharedPrefHandler.getPhoneNo();
-        if(p==null) {
+        if (p == null || p.contentEquals("NA")) {
             p = phno.getText().toString();
             phoneno = p;
         }
@@ -193,8 +208,6 @@ public class ReliabilityRequest extends AppCompatActivity {
         } else {
             phno.setError(null);
         }
-        if(p.length() ==14)
-            valid = true;
 
 
         return valid;

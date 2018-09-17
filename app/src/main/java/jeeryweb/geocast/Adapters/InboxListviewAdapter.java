@@ -2,14 +2,12 @@ package jeeryweb.geocast.Adapters;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
@@ -17,14 +15,15 @@ import android.widget.ListView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-import jeeryweb.geocast.Activities.MessageExpanded;
 import jeeryweb.geocast.Models.InboxRowRecord;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.databinding.InboxRowRecordBinding;
@@ -43,6 +42,8 @@ public class InboxListviewAdapter {
     final String TAG= "InboxListviewAdapter";
     RequestQueue rq;
     Boolean[] doneArr;
+    private ImageLoader imageLoader;
+    HashMap<String, Bitmap> cacheProPic = new HashMap<>();
 
     public void recordsInListview(Context con, ListView lv, Activity activity, List<InboxRowRecord> rows) {
         inboxRowRecordAdapter=new InboxRowRecordAdapter(activity ,rows);
@@ -110,20 +111,36 @@ public class InboxListviewAdapter {
             inboxRowRecordBinding.messageTxt.setText(inboxRowRecord.txt);
             inboxRowRecordBinding.timeLast.setText(inboxRowRecord.time);
 
-            String url = inboxRowRecord.displayPic;
+            final String url = inboxRowRecord.displayPic;
 
             //if(!doneArr[position]){
-                Log.e(TAG, "Url is "+url);
+            //Log.e(TAG, "Url is "+url);
                 if(!url.equals("NA")){
-                    ImageRequest ir = new ImageRequest(url,
-                            new Response.Listener<Bitmap>() {
-                                @Override
-                                public void onResponse(Bitmap response) {
-                                    Log.e(TAG, "Recieved response");
-                                    inboxRowRecordBinding.profileImage.setImageBitmap(response);
-                                }
-                            }, 0, 0, null, null);
-                    rq.add(ir);
+
+                    if (cacheProPic.containsKey(url)) {
+                        inboxRowRecordBinding.profileImage.setImageBitmap(cacheProPic.get(url));
+                        Log.e(TAG, "found in cache");
+                    } else {
+                        Log.e(TAG, "not found in cache");
+                        ImageRequest ir = new ImageRequest(url,
+                                new Response.Listener<Bitmap>() {
+                                    @Override
+                                    public void onResponse(Bitmap response) {
+                                        Log.e(TAG, "Recieved response");
+                                        inboxRowRecordBinding.profileImage.setImageBitmap(response);
+                                        cacheProPic.put(url, response);
+                                    }
+                                }, 0, 0, null, null);
+                        rq.add(ir);
+                    }
+
+
+//                    imageLoader = CustomVolleyRequest.getInstance(con.getApplicationContext())
+//                            .getImageLoader();
+//                    imageLoader.get(url, ImageLoader.getImageListener(inboxRowRecordBinding.imageView,
+//                            R.drawable.ic_phone, android.R.drawable
+//                                    .ic_dialog_alert));
+//                    inboxRowRecordBinding.imageView.setImageUrl(url, imageLoader);
                 }
                 doneArr[position]=true;
             //}

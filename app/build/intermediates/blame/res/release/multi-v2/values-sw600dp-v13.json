@@ -4,24 +4,7 @@
             "outputFile": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeReleaseResources/merged.dir/values-sw600dp-v13/values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/mediarouter-v7-25.2.0.aar/a54bdcff999eed5bef1900689f3e6546/res/values-sw600dp-v13/values-sw600dp-v13.xml",
-                    "from": {
-                        "startLines": "2,3",
-                        "startColumns": "4,4",
-                        "startOffsets": "55,124",
-                        "endColumns": "68,68",
-                        "endOffsets": "119,188"
-                    },
-                    "to": {
-                        "startLines": "18,19",
-                        "startColumns": "4,4",
-                        "startOffsets": "1170,1239",
-                        "endColumns": "68,68",
-                        "endOffsets": "1234,1303"
-                    }
-                },
-                {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/design-26.1.0.aar/af370a439b404a9e20b3cef1d4e38f39/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/design-26.1.0.aar/b30fa014a26cbda1a9a71e443cac252e/res/values-sw600dp-v13/values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4",
@@ -40,13 +23,30 @@
                     }
                 },
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/ffd88eb28851ff4f227fbd52892f8799/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/2ac3f04fd8df8c6358306efd652abeb4/res/values-sw600dp-v13/values-sw600dp-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
                         "startOffsets": "55,124,193,263,337,413,472,543",
                         "endColumns": "68,68,69,73,75,58,70,67",
                         "endOffsets": "119,188,258,332,408,467,538,606"
+                    }
+                },
+                {
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/mediarouter-v7-25.2.0.aar/a2b4a01b03e2ad0a0444c572f5eeaeba/res/values-sw600dp-v13/values-sw600dp-v13.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,124",
+                        "endColumns": "68,68",
+                        "endOffsets": "119,188"
+                    },
+                    "to": {
+                        "startLines": "18,19",
+                        "startColumns": "4,4",
+                        "startOffsets": "1170,1239",
+                        "endColumns": "68,68",
+                        "endOffsets": "1234,1303"
                     }
                 }
             ]

@@ -25,7 +25,6 @@
             android:src="@drawable/ic_user"
             android:layout_centerInParent="true"
             app:civ_border_width="2dp"
-            android:layout_margin="10dp"
             android:paddingTop="10dp"
             app:civ_border_color="#FF000000"/>
 
@@ -57,15 +56,14 @@
     </RelativeLayout>
 
 
-<FrameLayout
+    <ScrollView
     android:layout_width="match_parent"
     android:layout_height="0dp"
     android:id="@+id/profile_fragment_replace"
     android:layout_weight="6">
 
 
-
-</FrameLayout>
+    </ScrollView>
 
 
 </LinearLayout>

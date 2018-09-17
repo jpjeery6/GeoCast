@@ -65,7 +65,7 @@ public class FirebaseRegistrationIntentService  extends  IntentService{
             new Thread(new Runnable() {
                 public void run() {                                                 //THREAD 1.................
                     // a potentially  time consuming task
-                    Network network = new Network(apiEndPoint.updateFcm, Home.username, Home.password, "dummy", "00.00", "00.00", token, null, null, null, null);
+                    Network network = new Network(APIEndPoint.updateFcm, Home.username, Home.password, "dummy", "00.00", "00.00", token, null, null, null, null);
                     String result = network.DoWork();
                     if (result != null) {
                         Log.e(TAG, " Fcm " + result);

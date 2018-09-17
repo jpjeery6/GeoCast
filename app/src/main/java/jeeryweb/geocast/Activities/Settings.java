@@ -2,13 +2,14 @@ package jeeryweb.geocast.Activities;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-
+import android.view.MenuItem;
 
 import jeeryweb.geocast.Fragments.SettingsFragment;
 import jeeryweb.geocast.R;
@@ -36,15 +37,13 @@ public class Settings extends AppCompatActivity {
 
         Fragment fragment =new SettingsFragment();
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-        if(savedInstanceState == null)
-        {
+        if(savedInstanceState == null) {
             fragmentTransaction.add(R.id.settings_fragment_container,fragment,"settings_fragment");
             fragmentTransaction.commit();
-        }
-        else
-        {
+        } else {
             fragment = getFragmentManager().findFragmentByTag("settings_fragment");
         }
+
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         int setRadius = sharedPref.getInt(SettingsFragment.KEY_RADIUS, 0);
@@ -54,11 +53,38 @@ public class Settings extends AppCompatActivity {
         Log.e("settings on off = " , setSendToRelOnlySett +" ");
 
 
-
-
-
     }
 
+    public String getRadiusSetting(Context con) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(con);
+        int setRadius = sharedPref.getInt(SettingsFragment.KEY_RADIUS, 0);
+        boolean setSendToRelOnlySett = sharedPref.getBoolean(SettingsFragment.KEY_SEND_TO_REL_SETT, false);
+
+        Log.e("settings radius = ", setRadius + " ");
+        Log.e("settings on off = ", setSendToRelOnlySett + " ");
+        return Integer.toString(setRadius);
+    }
+
+    public String getReliableSetting(Context con) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(con);
+        int setRadius = sharedPref.getInt(SettingsFragment.KEY_RADIUS, 0);
+        boolean setSendToRelOnlySett = sharedPref.getBoolean(SettingsFragment.KEY_SEND_TO_REL_SETT, false);
+
+        Log.e("settings radius = ", setRadius + " ");
+        Log.e("settings on off = ", setSendToRelOnlySett + " ");
+        return String.valueOf(setSendToRelOnlySett);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
 
 }

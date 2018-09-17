@@ -76,12 +76,12 @@ public class Login extends AppCompatActivity {
         c = this;
 
         //setting up widgets
-        user = (EditText) findViewById(R.id.activity_login_user);
-        pass = (EditText) findViewById(R.id.activity_login_pass);
-        imeiShow = (EditText) findViewById(R.id.activity_login_imei);
-        login = (Button) findViewById(R.id.activity_login_loginbtn);
-        registerLink = (TextView) findViewById(R.id.activity_login_link_signup);
-        migrate = (TextView) findViewById(R.id.activity_login_migartebtn);
+        user = findViewById(R.id.activity_login_user);
+        pass = findViewById(R.id.activity_login_pass);
+        imeiShow = findViewById(R.id.activity_login_imei);
+        login = findViewById(R.id.activity_login_loginbtn);
+        registerLink = findViewById(R.id.activity_login_link_signup);
+        migrate = findViewById(R.id.activity_login_migartebtn);
 
 
         if (session.isLoggedIn()) {
@@ -160,6 +160,9 @@ public class Login extends AppCompatActivity {
                     Toast.makeText(Login.this, "Your credentials are wrong", Toast.LENGTH_SHORT).show();
                 } else if (result.contains("valid")) {
 
+                    //get everything from network
+
+
                     session.createLoginSession(us, pa);
 
                     Intent i = new Intent(c, Home.class);
@@ -227,7 +230,7 @@ public class Login extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {
                 // a potentially  time consuming task
-                network = new Network(apiEndPoint.lgIn, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", imeinumber, null, null, null);
+                network = new Network(APIEndPoint.lgIn, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", imeinumber, null, null, null);
                 result = network.DoWork();
 
                 if (result != null) {
@@ -287,7 +290,7 @@ public class Login extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {
                 // a potentially  time consuming task
-                network = new Network(apiEndPoint.migL, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", new_imei, null, null, null);
+                network = new Network(APIEndPoint.migL, us, pa, "dummymsg", "00.00", "00.00", "jhdjhjjjkh", new_imei, null, null, null);
                 result = network.DoWork();
 
 

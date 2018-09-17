@@ -149,7 +149,6 @@
         <!-- End Pushy Declarations -->
 
         <activity
-
             android:name=".Activities.MessageExpanded"
             android:label="@string/title_activity_message_expanded"
             android:parentActivityName=".Activities.Inbox">
@@ -158,17 +157,18 @@
                 android:value="jeeryweb.geocast.Activities.Inbox" />
         </activity>
         <activity android:name=".Activities.UserProfileView" />
-
         <activity
             android:name=".Activities.Feedback"
-            android:label="@string/title_activity_feedback"></activity>
+            android:label="@string/title_activity_feedback" />
         <activity
             android:name=".Activities.Settings"
             android:label="@string/title_activity_settings">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="jeeryweb.geocast.Activities.Home" />
         </activity>
+
+        <receiver
+            android:name=".Reciever.RecieverResetHelpingList"
+            android:enabled="true"
+            android:exported="true"></receiver>
     </application>
 
 </manifest>

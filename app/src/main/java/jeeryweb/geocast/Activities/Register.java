@@ -1,7 +1,10 @@
 package jeeryweb.geocast.Activities;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -27,10 +30,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
@@ -61,12 +68,17 @@ public class Register extends AppCompatActivity {
     RadioGroup bioGender;
     Button register ;
     TextView loginLink;
+    RadioButton bioGendervalue;
     ProgressDialog progressDialog , progressDialogUplaod;
 
-    String bio,fcmtoken;
+    String bio, fcmtoken, ph;
     String imeiNumber;
     ImageView imageView;
     ImageButton selectImage;
+    Bitmap image2;
+
+
+    String passcode;
 
     private static final int RESULT_SELECT_IMAGE = 1;
 
@@ -90,21 +102,23 @@ public class Register extends AppCompatActivity {
         c = this;
 
         //setting up widgets
-        reguser=(EditText)findViewById(R.id.activity_register_user);
-        regpass1=(EditText)findViewById(R.id.activity_register_pass1);
-        regpass2=(EditText)findViewById(R.id.activity_register_pass2);
-        register=(Button)findViewById(R.id.activity_register_regbtn) ;
-        loginLink=(TextView)findViewById(R.id.activity_register_link_login);
-        imeiShow = (EditText)findViewById(R.id.activity_reg_imei);
+        reguser = findViewById(R.id.activity_register_user);
+        regpass1 = findViewById(R.id.activity_register_pass1);
+        regpass2 = findViewById(R.id.activity_register_pass2);
+        register = findViewById(R.id.activity_register_regbtn);
+        loginLink = findViewById(R.id.activity_register_link_login);
+        imeiShow = findViewById(R.id.activity_reg_imei);
 
-        bioAge = (EditText)findViewById(R.id.activity_register_bioage);
-        bioOccupation = (EditText)findViewById(R.id.activity_register_biooccupation);
-        bioGender = (RadioGroup)findViewById(R.id.activity_register_biogender);
+        bioAge = findViewById(R.id.activity_register_bioage);
+        bioOccupation = findViewById(R.id.activity_register_biooccupation);
+        bioGender = findViewById(R.id.activity_register_biogender);
 
-        phone = (EditText)findViewById(R.id.activity_register_phonenumber);
+        phone = findViewById(R.id.activity_register_phonenumber);
 
-        imageView = (ImageView) findViewById(R.id.activity_register_pp_imageView);
-        selectImage = (ImageButton) findViewById(R.id.activity_register_ppselectImage);
+        imageView = findViewById(R.id.activity_register_pp_imageView);
+        selectImage = findViewById(R.id.activity_register_ppselectImage);
+        int selectedId = bioGender.getCheckedRadioButtonId();
+        bioGendervalue = findViewById(selectedId);
 
         //ask for permissions
         //getImei_askForPermission(Manifest.permission.READ_PHONE_STATE, 0x1);
@@ -155,12 +169,13 @@ public class Register extends AppCompatActivity {
                 if (result.contains("valid")) {
 
                     session.createLoginSession(uss, pas);
-                    Intent i = new Intent(c, Home.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putBoolean("firstTime",true);
-                    i.putExtras(bundle);
-                    startActivity(i);
-                    finish();
+                    if (phone.getText().toString().contentEquals(""))
+                        ph = "NA";
+                    else
+                        ph = phone.getText().toString();
+                    session.saveBio(bioOccupation.getText().toString(), bioGendervalue.getText().toString(), bioAge.getText().toString(), ph);
+                    showAlertBoxForPasscode();
+
                 }
                 else{
                     Toast.makeText(c, result, Toast.LENGTH_LONG).show();
@@ -179,6 +194,7 @@ public class Register extends AppCompatActivity {
             return;
         }
 
+
         progressDialog = new ProgressDialog(Register.this);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Creating Account");
@@ -190,9 +206,6 @@ public class Register extends AppCompatActivity {
         uss = reguser.getText().toString();
         pas = regpass1.getText().toString();
 
-        int selectedId = bioGender.getCheckedRadioButtonId();
-        RadioButton bioGendervalue = (RadioButton) findViewById(selectedId);
-
 
         bio = bioAge.getText().toString() + '|' + bioOccupation.getText().toString() + '|' + bioGendervalue.getText().toString();
         String reEnterPassword = regpass2.getText().toString();
@@ -202,12 +215,12 @@ public class Register extends AppCompatActivity {
         //save all info to show on profile page
         session.saveBio(bioOccupation.getText().toString(),bioGendervalue.getText().toString(),bioAge.getText().toString(),phonevalue);
 
-
+        passcode = generatePassCode(uss, pas);
         Log.d(TAG, "Data "+uss+pas+bio+imeiNumber);
         new Thread(new Runnable() {
             public void run() {
                 // a potentially  time consuming task
-                network =new Network(apiEndPoint.reg,uss,pas,"dummymsg","00.00","00.00",fcmtoken, imeiNumber, bio, phonevalue, picname);
+                network = new Network(APIEndPoint.reg, uss, pas, passcode, "00.00", "00.00", fcmtoken, imeiNumber, bio, phonevalue, picname);
                 result=network.DoWork();
                 Log.e("result",result);
                 progressDialog.dismiss();
@@ -231,7 +244,18 @@ public class Register extends AppCompatActivity {
         String email = reguser.getText().toString();
         String password = regpass1.getText().toString();
         String passwordre= regpass2.getText().toString();
+        String occupation = bioOccupation.getText().toString();
+        String gender = bioGendervalue.getText().toString();
+        String age = bioAge.getText().toString();
+
         String p = phone.getText().toString();
+//        if(p.contentEquals(""))
+//            Log.e("p=","yes 1");
+//        if(p.contentEquals(" "))
+//            Log.e("p=","yes 2");
+
+
+        Log.e("Register ph no = ", "junk" + p);
 
         if(imeiNumber ==null){
             imeiNumber = imeiExtractor.getPhoneIEMINumber();
@@ -257,6 +281,23 @@ public class Register extends AppCompatActivity {
         } else {
             regpass2.setError(null);
         }
+
+        if (age.isEmpty() || age.length() > 3) {
+            bioAge.setError("enter a valid Age");
+            valid = false;
+        } else {
+            bioAge.setError(null);
+        }
+
+        if (occupation.isEmpty() || occupation.length() < 2) {
+            bioOccupation.setError("enter a valid Profession");
+            valid = false;
+        } else {
+            bioOccupation.setError(null);
+        }
+
+
+
         if (p.length()!=10 && p.length()!=0) {
             phone.setError("Invalid phone number");
             valid = false;
@@ -265,6 +306,63 @@ public class Register extends AppCompatActivity {
         }
 
         return valid;
+    }
+
+    private String generatePassCode(String us, String ps) {
+
+        int l = 20;
+        StringBuilder sb = new StringBuilder();
+        Random rand = new Random();
+        String passcode = new String();
+        for (int i = 0; i < l; i++) {
+            sb.append(rand.nextInt(9) + 1);
+        }
+        Log.e("Register", "passcoe is " + sb.toString());
+        return sb.toString();
+    }
+
+    public void showAlertBoxForPasscode() {
+        AlertDialog alertDialog = new AlertDialog.Builder(
+                Register.this).create();
+
+        // Setting Dialog Title
+        alertDialog.setTitle("Passcode generated " + passcode);
+        alertDialog.setCancelable(false);
+        alertDialog.setCanceledOnTouchOutside(false);
+        // Setting Dialog Message
+        alertDialog.setMessage("Please copy the generated passcode. This can be used when you forget your password or want to migrate your app to new device");
+
+        // Setting Icon to Dialog
+        alertDialog.setIcon(R.drawable.ic_launcher);
+
+        // Setting OK Button
+        alertDialog.setButton("Copy", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                // Write your code here to execute after dialog closed
+                setClipboard(getApplicationContext(), passcode);
+                Toast.makeText(getApplicationContext(), "Passcode copied", Toast.LENGTH_LONG).show();
+                Intent i = new Intent(c, Home.class);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("firstTime", true);
+                i.putExtras(bundle);
+                startActivity(i);
+                finish();
+            }
+        });
+
+        // Showing Alert Message
+        alertDialog.show();
+    }
+
+    private void setClipboard(Context context, String text) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setText(text);
+        } else {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
+            clipboard.setPrimaryClip(clip);
+        }
     }
 
     public void selectImage(){
@@ -292,7 +390,7 @@ public class Register extends AppCompatActivity {
             progressDialogUplaod.show();
 
             //get image in bitmap format
-            Bitmap image2 = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+            image2 = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
             //execute the async task and upload the image to server
             picname = "IMG_"+timestamp;
             new Upload(image2,picname).execute();
@@ -328,7 +426,7 @@ public class Register extends AppCompatActivity {
                 //convert this HashMap to encodedUrl to send to php file
                 String dataToSend = hashMapToUrl(detail);
                 //make a Http request and send data to saveImage.php file
-                String response = PPUpload.post(apiEndPoint.url_uplaod,dataToSend);
+                String response = PPUpload.post(APIEndPoint.url_uplaod, dataToSend);
 
                 //return the response
                 return response;
@@ -340,13 +438,40 @@ public class Register extends AppCompatActivity {
             }
         }
 
+        public String saveProfilePicture(Bitmap bitmap) {
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+            // path to /data/data/yourapp/app_data/imageDir
+            File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+            // Create imageDir
+            File mypath = new File(directory, "profile.jpg");
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(mypath);
+                // Use the compress method on the BitMap object to write image to the OutputStream
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            session.savePPpath(directory.getAbsolutePath());
+            return directory.getAbsolutePath();
+
+        }
+
 
 
         protected void onPostExecute(String s){
             //show image uploaded
             progressDialogUplaod.dismiss();
-            if(s!=null)
-                Toast.makeText(getApplicationContext(),"Image Uploaded "+s,Toast.LENGTH_SHORT).show();
+            if (s != null) {
+                Toast.makeText(getApplicationContext(), "Image Uploaded " + s, Toast.LENGTH_SHORT).show();
+                saveProfilePicture(image2);
+            }
             else
                 Toast.makeText(getApplicationContext(),"Image Uploaded Failed",Toast.LENGTH_SHORT).show();
         }

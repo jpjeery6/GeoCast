@@ -79,7 +79,7 @@
                         android:layout_margin="10dp"
                         android:layout_height="wrap_content"
                         android:inputType="number"
-                        android:hint="Phone number(optional)" />
+                        android:hint="Phone number*" />
                 </android.support.design.widget.TextInputLayout>
 
                 <TextView

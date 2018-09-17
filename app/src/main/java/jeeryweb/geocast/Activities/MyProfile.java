@@ -68,9 +68,9 @@ public class MyProfile extends AppCompatActivity {
         c=this;
         sharedPrefHandler= new SharedPrefHandler(this);
 
-        usernamePP = (TextView) findViewById(R.id.activity_myprofile_username);
-        selectProfilePic = (ImageButton)findViewById(R.id.activity_myprofile_addimagebutton);
-        profilePic = (CircleImageView) findViewById(R.id.activity_myprofile_pp);
+        usernamePP = findViewById(R.id.activity_myprofile_username);
+        selectProfilePic = findViewById(R.id.activity_myprofile_addimagebutton);
+        profilePic = findViewById(R.id.activity_myprofile_pp);
 
         usernamePP.setText(Home.username);
 
@@ -193,7 +193,7 @@ public class MyProfile extends AppCompatActivity {
                 //convert this HashMap to encodedUrl to send to php file
                 String dataToSend = hashMapToUrl(detail);
                 //make a Http request and send data to saveImage.php file
-                String response = PPUpload.post(apiEndPoint.url_uplaod,dataToSend);
+                String response = PPUpload.post(APIEndPoint.url_uplaod, dataToSend);
 
                 //return the response
                 return response;

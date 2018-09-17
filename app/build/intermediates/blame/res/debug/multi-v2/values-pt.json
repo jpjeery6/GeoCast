@@ -4,7 +4,7 @@
             "outputFile": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeDebugResources/merged.dir/values-pt/values-pt.xml",
             "map": [
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/ffd88eb28851ff4f227fbd52892f8799/res/values-pt/values-pt.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/2ac3f04fd8df8c6358306efd652abeb4/res/values-pt/values-pt.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/mediarouter-v7-25.2.0.aar/a54bdcff999eed5bef1900689f3e6546/res/values-pt/values-pt.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/mediarouter-v7-25.2.0.aar/a2b4a01b03e2ad0a0444c572f5eeaeba/res/values-pt/values-pt.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",

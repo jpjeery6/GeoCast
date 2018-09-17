@@ -2,7 +2,6 @@ package jeeryweb.geocast.Adapters;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.util.Log;
@@ -20,13 +19,12 @@ import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-import jeeryweb.geocast.Activities.ReliabilityResponse;
 import jeeryweb.geocast.Models.InboxRowRecord;
 import jeeryweb.geocast.Models.ReliabilitiesRowRecord;
 import jeeryweb.geocast.R;
-import jeeryweb.geocast.Activities.UserProfileView;
 import jeeryweb.geocast.databinding.ReliabilitiesRowRecordBinding;
 
 public class ReliabilitiesListviewAdapter {
@@ -37,6 +35,7 @@ public class ReliabilitiesListviewAdapter {
     List<ReliabilitiesRowRecord> rows;
     final String TAG ="Reliabilities";
     RequestQueue rq;
+    HashMap<String, Bitmap> cacheProPic = new HashMap<>();
 
     public void recordsInListview(Context con, ListView lv, Activity activity, List<ReliabilitiesRowRecord> rows) {
         reliabilitiesRowRecordAdapter=new ReliabilitiesListviewAdapter.ReliabilitiesRowRecordAdapter(activity ,rows);
@@ -92,21 +91,28 @@ public class ReliabilitiesListviewAdapter {
                 reliabilitiesRowRecordBinding.upDownArrow.setImageResource(R.drawable.ic_call_made_black_24dp);
             else
                 reliabilitiesRowRecordBinding.upDownArrow.setImageResource(R.drawable.ic_call_received_black_24dp);
-            String urlPic = reliabilitiesRowRecord.picture;
+            final String urlPic = reliabilitiesRowRecord.picture;
             int userID = reliabilitiesRowRecord.userID;
 
             Log.e("Reliabilities", "Url is "+urlPic);
             if(!urlPic.equals("NA")){
-                Log.e("Reliabilities", "Url is "+urlPic);
-                ImageRequest ir = new ImageRequest(urlPic,
-                        new Response.Listener<Bitmap>() {
-                            @Override
-                            public void onResponse(Bitmap response) {
-                                Log.e("Reliabilities", "Recieved response");
-                                reliabilitiesRowRecordBinding.profileImage.setImageBitmap(response);
-                            }
-                        }, 0, 0, null, null);
-                rq.add(ir);
+
+                if (cacheProPic.containsKey(urlPic)) {
+                    reliabilitiesRowRecordBinding.profileImage.setImageBitmap(cacheProPic.get(urlPic));
+                    Log.e(TAG, "found in cache");
+                } else {
+                    Log.e(TAG, "not found in cache");
+                    ImageRequest ir = new ImageRequest(urlPic,
+                            new Response.Listener<Bitmap>() {
+                                @Override
+                                public void onResponse(Bitmap response) {
+                                    Log.e(TAG, "Recieved response");
+                                    reliabilitiesRowRecordBinding.profileImage.setImageBitmap(response);
+                                    cacheProPic.put(urlPic, response);
+                                }
+                            }, 0, 0, null, null);
+                    rq.add(ir);
+                }
             }
 
 //            reliabilitiesRowRecordBinding.displayLoc.setOnClickListener(new View.OnClickListener() {

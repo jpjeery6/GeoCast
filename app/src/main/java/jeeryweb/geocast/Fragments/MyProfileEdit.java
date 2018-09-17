@@ -5,10 +5,13 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +33,9 @@ import jeeryweb.geocast.Utility.SharedPrefHandler;
 public class MyProfileEdit extends Fragment {
 
     private TextView doneTextButton;
-    private EditText occupationPP,agePP,genderPP,phonePP;
+    private EditText occupationPP, agePP, phonePP;
+    private RadioGroup genderPP;
+    private RadioButton genderR;
     private SharedPrefHandler sharedPrefHandler;
     private RequestQueue requestQueue;
     private ProgressDialog progressDialog;
@@ -46,19 +51,20 @@ public class MyProfileEdit extends Fragment {
         requestQueue = Volley.newRequestQueue(getContext());
         sharedPrefHandler = new SharedPrefHandler(getContext());
 
-        occupationPP = (EditText) view.findViewById(R.id.activity_myprofile_profession);
-        agePP = (EditText) view.findViewById(R.id.activity_myprofile_age);
-        genderPP = (EditText) view.findViewById(R.id.activity_myprofile_gender);
-        phonePP = (EditText) view.findViewById(R.id.activity_myprofile_phno);
-        doneTextButton  = (TextView)view.findViewById(R.id.activity_myprofile_donebutton);
+        occupationPP = view.findViewById(R.id.activity_myprofile_profession);
+        agePP = view.findViewById(R.id.activity_myprofile_age);
+        genderPP = view.findViewById(R.id.activity_myprofile_gender);
+        phonePP = view.findViewById(R.id.activity_myprofile_phno);
+        doneTextButton = view.findViewById(R.id.activity_myprofile_donebutton);
 
-
+        int selectedId = genderPP.getCheckedRadioButtonId();
+        genderR = view.findViewById(selectedId);
         if(sharedPrefHandler.getOccupation() != null)
             occupationPP.setText(sharedPrefHandler.getOccupation());
         if(sharedPrefHandler.getAge() != null)
             agePP.setText(sharedPrefHandler.getAge());
         if(sharedPrefHandler.getGender() != null)
-            genderPP.setText(sharedPrefHandler.getGender());
+            genderR.setText(sharedPrefHandler.getGender());
         if(sharedPrefHandler.getPhoneNo() != null)
             phonePP.setText(sharedPrefHandler.getPhoneNo());
 
@@ -67,62 +73,63 @@ public class MyProfileEdit extends Fragment {
             public void onClick(View view) {
                 // Create fragment and give it an argument specifying the article it should show
 
-                progressDialog = new ProgressDialog(getContext());
-                progressDialog.setIndeterminate(true);
-                progressDialog.setMessage("Updating");
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                progressDialog.show();
+                if (validate()) {
+                    progressDialog = new ProgressDialog(getContext());
+                    progressDialog.setIndeterminate(true);
+                    progressDialog.setMessage("Updating");
+                    progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    progressDialog.show();
 
-                String occu = occupationPP.getText().toString();
-                String ag = agePP.getText().toString();
-                String gen = genderPP.getText().toString();
-                String phno = phonePP.getText().toString();
+                    String occu = occupationPP.getText().toString();
+                    String ag = agePP.getText().toString();
+                    String gen = genderR.getText().toString();
+                    String phno = phonePP.getText().toString();
 
-                //check if phone no is valid
-                phnumfin = phno;
+                    //check if phone no is valid
+                    if (phno.contentEquals(""))
+                        phnumfin = "NA";
+                    else
+                        phnumfin = phno;
 
-                bio = ag+"|"+occu+"|"+gen;
+                    bio = ag + "|" + occu + "|" + gen;
 
-                sharedPrefHandler.saveBio(occu,gen,ag,phno);
+                    sharedPrefHandler.saveBio(occu, gen, ag, phnumfin);
 
-                //update Bio in database
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.updateBio,
-                        new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                progressDialog.dismiss();
+                    //update Bio in database
+                    StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.updateBio,
+                            new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    progressDialog.dismiss();
 
                                     Toast.makeText(getContext(), response, Toast.LENGTH_SHORT).show();
                                     //if(response.contains("complete"))
                                     replaceFragment();
 
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                //Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        }){
-                    @Override
-                    protected Map<String, String> getParams()
-                    {
-                        Map<String, String>  params = new HashMap<String, String>();
-                        params.put("Username", Home.username);
-                        params.put("Bio", bio);
-                        params.put("PhoneNo", phnumfin);
+                                }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    //Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }) {
+                        @Override
+                        protected Map<String, String> getParams() {
+                            Map<String, String> params = new HashMap<String, String>();
+                            params.put("Username", Home.username);
+                            params.put("Bio", bio);
+                            params.put("PhoneNo", phnumfin);
 
-                        return params;
-                    }
-                };
+                            return params;
+                        }
+                    };
 
-                requestQueue.add(stringRequest);
-
+                    requestQueue.add(stringRequest);
 
 
-
-                //manager.popBackStack();
-
+                    //manager.popBackStack();
+                }
             }
         });
 
@@ -130,8 +137,7 @@ public class MyProfileEdit extends Fragment {
         return view;
     }
 
-    private void replaceFragment()
-    {
+    private void replaceFragment() {
         MyProfileShow newFragment = new MyProfileShow();
         Bundle args = new Bundle();
         //args.putInt(MyProfileEdit.ARG_POSITION, position);
@@ -139,7 +145,6 @@ public class MyProfileEdit extends Fragment {
         FragmentManager manager = getActivity().getSupportFragmentManager();
 
         FragmentTransaction transaction = manager.beginTransaction();
-
 
 
         // Replace whatever is in the fragment_container view with this fragment,
@@ -151,5 +156,47 @@ public class MyProfileEdit extends Fragment {
         // Commit the transaction
         transaction.commit();
 
+    }
+
+
+    public boolean validate() {
+        boolean valid = true;
+        String occupation = occupationPP.getText().toString();
+        String gender = genderR.getText().toString();
+        String age = agePP.getText().toString();
+
+        String p = phonePP.getText().toString();
+//        if(p.contentEquals(""))
+//            Log.e("p=","yes 1");
+//        if(p.contentEquals(" "))
+//            Log.e("p=","yes 2");
+
+
+        Log.e("Register ph no = ", "junk" + p);
+
+
+        if (age.isEmpty() || age.length() > 3) {
+            agePP.setError("enter a valid Age");
+            valid = false;
+        } else {
+            agePP.setError(null);
+        }
+
+        if (occupation.isEmpty() || occupation.length() < 2) {
+            occupationPP.setError("enter a valid Profession");
+            valid = false;
+        } else {
+            occupationPP.setError(null);
+        }
+
+
+        if (p.length() != 10 && p.length() != 0) {
+            phonePP.setError("Invalid phone number");
+            valid = false;
+        } else {
+            phonePP.setError(null);
+        }
+
+        return valid;
     }
 }

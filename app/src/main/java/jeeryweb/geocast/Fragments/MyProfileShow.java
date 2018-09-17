@@ -30,12 +30,11 @@ public class MyProfileShow extends Fragment {
         sharedPrefHandler = new SharedPrefHandler(getContext());
 
 
-
-        occupationPP = (TextView) view.findViewById(R.id.activity_myprofile_profession);
-        agePP = (TextView) view.findViewById(R.id.activity_myprofile_age);
-        genderPP = (TextView) view.findViewById(R.id.activity_myprofile_gender);
-        phonePP = (TextView) view.findViewById(R.id.activity_myprofile_phno);
-        editTextButton  = (TextView)view.findViewById(R.id.activity_myprofile_editbutton);
+        occupationPP = view.findViewById(R.id.activity_myprofile_profession);
+        agePP = view.findViewById(R.id.activity_myprofile_age);
+        genderPP = view.findViewById(R.id.activity_myprofile_gender);
+        phonePP = view.findViewById(R.id.activity_myprofile_phno);
+        editTextButton = view.findViewById(R.id.activity_myprofile_editbutton);
 
 
         if(sharedPrefHandler.getOccupation() != null)

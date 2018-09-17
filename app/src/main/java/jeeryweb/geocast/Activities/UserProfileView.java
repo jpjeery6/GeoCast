@@ -9,12 +9,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -65,10 +62,10 @@ public class UserProfileView extends AppCompatActivity {
         Log.e("ReliabiltyResusername", username);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        pp = (CircleImageView) findViewById(R.id.activity_user_profile_view_image);
-        User = (TextView) findViewById(R.id.activity_user_profile_view_Username);
-        summary = (TextView) findViewById(R.id.activity_user_profile_view_summary);
-        loadingSummaryprogressBar = (ProgressBar) findViewById(R.id.activity_user_profile_view_progressbar);
+        pp = findViewById(R.id.activity_user_profile_view_image);
+        User = findViewById(R.id.activity_user_profile_view_Username);
+        summary = findViewById(R.id.activity_user_profile_view_summary);
+        loadingSummaryprogressBar = findViewById(R.id.activity_user_profile_view_progressbar);
 
         sharedPrefHandler = new SharedPrefHandler(this);
 
@@ -85,7 +82,7 @@ public class UserProfileView extends AppCompatActivity {
         new Thread(new Runnable() {
             public void run() {                                                 //THREAD 4.............
                 // a potentially  time consuming task
-                network = new Network(apiEndPoint.getPPSummary, username, "kkk", "kkk", "kk", "kk", "ksdhfj", null, null, null, null);
+                network = new Network(APIEndPoint.getPPSummary, username, "kkk", "kkk", "kk", "kk", "ksdhfj", null, null, null, null);
                 result = network.DoWork();
                 if (result != null) {
                     Log.e("get PP abd summary", result);
@@ -113,10 +110,22 @@ public class UserProfileView extends AppCompatActivity {
 
                     String PPlink = PPSum[0];
                     String Summary = PPSum[1];
+                    String responseTime = PPSum[2];
+
+                    if (Double.parseDouble(responseTime) == -1)
+                        responseTime = "Not responded to a message yet";
+                    else
+                        responseTime = responseTime + "s";
 
                     new UserProfileView.setPP(PPlink).execute();
 
-                    summary.setText(Summary);
+                    //format the summary
+                    String[] summarysplitter = Summary.split("\\|");
+                    String age = summarysplitter[0];
+                    String profession = summarysplitter[1];
+                    String gender = summarysplitter[2];
+                    //  String noConnections = summarysplitter[3];
+                    summary.setText("Age: " + age + "\n" + "Profession: " + profession + "\n" + "Gender: " + gender + "\n" + "Avg Response Time: " + responseTime);
                     loadingSummaryprogressBar.setVisibility(View.GONE);
 
                 }

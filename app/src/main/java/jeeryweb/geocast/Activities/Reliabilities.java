@@ -45,7 +45,6 @@ import java.util.Map;
 
 import jeeryweb.geocast.Adapters.ReliabilitiesListviewAdapter;
 import jeeryweb.geocast.Constants.APIEndPoint;
-import jeeryweb.geocast.Models.InboxRowRecord;
 import jeeryweb.geocast.Models.ReliabilitiesRowRecord;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Utility.Network;
@@ -99,7 +98,7 @@ public class Reliabilities extends AppCompatActivity {
         window.setStatusBarColor(ContextCompat.getColor(this,R.color.colorPrimaryDark));
 
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.activity_reliabilities_toolbar);
+        Toolbar toolbar = findViewById(R.id.activity_reliabilities_toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         // Create the adapter that will return a fragment for each of the three
@@ -107,9 +106,9 @@ public class Reliabilities extends AppCompatActivity {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager = findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabindicator);
+        TabLayout tabLayout = findViewById(R.id.tabindicator);
         tabLayout.setupWithViewPager(mViewPager, true);
 
         RequestQueue requestQueue = Volley.newRequestQueue(this);
@@ -311,14 +310,14 @@ public class Reliabilities extends AppCompatActivity {
 
 
             rootView = inflater.inflate(R.layout.fragment_reliabilities, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+            TextView textView = rootView.findViewById(R.id.section_label);
             ARG_SECTION_NO = getArguments().getInt(ARG_SECTION_NUMBER);
             //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 
             if(ARG_SECTION_NO==1)
-              recordsList1= (ListView)rootView.findViewById(R.id.reliabilitylist);
+                recordsList1 = rootView.findViewById(R.id.reliabilitylist);
             else
-              recordsList2= (ListView)rootView.findViewById(R.id.reliabilitylist);
+                recordsList2 = rootView.findViewById(R.id.reliabilitylist);
 
             //single network call to get everything
             reliabilitiesListviewAdapter = new ReliabilitiesListviewAdapter();
@@ -366,4 +365,5 @@ public class Reliabilities extends AppCompatActivity {
             return 2;
         }
     }
+
 }

@@ -7,8 +7,11 @@ package jeeryweb.geocast.Utility;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SharedPrefHandler {
 
@@ -47,6 +50,10 @@ public class SharedPrefHandler {
     public  static final String RADIUS = "Radius";
     public  static final String SENDTORELONLY = "SendToRelOnly";
 
+
+    //live users
+
+    public static final String HelpingUsers = "HelpersUsers";
 
 //Methods
     // Constructor
@@ -165,6 +172,26 @@ public class SharedPrefHandler {
     public String getPhoneNo()
     {
         return pref.getString(PHONENO, null);
+    }
+
+    //for live users on map
+    public void saveHelpingUser(String h) {
+
+        Set<String> s = pref.getStringSet(HelpingUsers, new HashSet<String>());
+        s.add(h);
+
+        editor.putStringSet(HelpingUsers, s);
+        editor.commit();
+    }
+
+    public Set<String> getHelpingUser() {
+        return pref.getStringSet(HelpingUsers, new HashSet<String>());
+    }
+
+    public void resetHelpingUsers() {
+        Log.e("HomeP", "in reset helping list");
+        editor.putStringSet(HelpingUsers, new HashSet<String>());
+        editor.commit();
     }
 
 }

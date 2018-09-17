@@ -23,7 +23,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +30,7 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.R;
+import jeeryweb.geocast.Utility.SharedPrefHandler;
 
 public class MessageExpanded extends AppCompatActivity {
 
@@ -44,9 +44,11 @@ public class MessageExpanded extends AppCompatActivity {
     String sender;
     String PPlink;
     RequestQueue requestQueue;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+    SharedPrefHandler sharedPrefHandler;
+    // SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
 
-
+    int id;
+    String message = null, timeSent = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,18 +61,18 @@ public class MessageExpanded extends AppCompatActivity {
         getSupportActionBar().setTitle("Message");
         //getSupportActionBar().setDisplayShowTitleEnabled(false);
         con = this;
+        sharedPrefHandler = new SharedPrefHandler(con);
         //widgets
-        ppSender = (CircleImageView)findViewById(R.id.Message_expanded_profile_image);
-        messageBodyView = (TextView)findViewById(R.id.Message_messageBody);
-        messageSenderView  = (TextView)findViewById(R.id.Message_Expanded_senderId);
-        messageTimeView  = (TextView)findViewById(R.id.Message_messageTime);
-        cardViewHelp = (CardView) findViewById(R.id.cardViewHelp);
-        ackYesView = (Button) findViewById(R.id.Message_AckYes);
-        ackNoView = (Button)findViewById(R.id.Message_AckNo);
+        ppSender = findViewById(R.id.Message_expanded_profile_image);
+        messageBodyView = findViewById(R.id.Message_messageBody);
+        messageSenderView = findViewById(R.id.Message_Expanded_senderId);
+        messageTimeView = findViewById(R.id.Message_messageTime);
+        cardViewHelp = findViewById(R.id.cardViewHelp);
+        ackYesView = findViewById(R.id.Message_AckYes);
+        ackNoView = findViewById(R.id.Message_AckNo);
 
         Intent intent =getIntent();
-        int id;
-        String message = null,timeSent= null;
+
 
         //timeSent = "2018-05-05 21:20:00";  //for debugging
 
@@ -103,6 +105,8 @@ public class MessageExpanded extends AppCompatActivity {
         messageSenderView.setTextSize(6 * getResources().getDisplayMetrics().density);
         //messageBodyView.setTextSize(6 * getResources().getDisplayMetrics().density);
         messageTimeView.setText(timeSent);
+
+        Log.e(TAG, timeSent);
         Boolean isMessageOld = _isMessageOld(timeSent);
 
         if(isMessageOld)
@@ -166,6 +170,9 @@ public class MessageExpanded extends AppCompatActivity {
                     Toast.makeText(con, "Error ooccureed!", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+
+                acknoledgeSender(calculateResponseTime());
                 String urlSender ="google.navigation:q="+_lattitideSender+","+_longitudeSender;
                 Log.e(TAG, "urlSender "+urlSender);
                 Uri gmmIntentUri = Uri.parse(urlSender);
@@ -190,37 +197,98 @@ public class MessageExpanded extends AppCompatActivity {
         requestQueue.add(ir);
     }
 
+    private long calculateResponseTime() {
 
-
-
-    Boolean _isMessageOld(String timeSent){
-
-        Date MessageTime=null;
-        Log.e(TAG, String.valueOf(timeSent));
+        Date MessageTime = null;
         try {
-            MessageTime = dateFormat.parse(timeSent);
+            MessageTime = Home.dateFormat.parse(timeSent);
+            Date currTime = new Date();
+
+            long diff = currTime.getTime() - MessageTime.getTime();
+            long seconds = diff / 1000;
+            long minutes = seconds / 60;
+            Log.e(TAG, "Diff is m=" + minutes);
+            return minutes;
         } catch (ParseException e) {
             Log.e(TAG, "could not parse MessageTime");
             e.printStackTrace();
+            return -1;
         }
-        Date currTime = new Date();
-        Log.e(TAG, String.valueOf(MessageTime));
 
-        long diff = currTime.getTime() - MessageTime.getTime();
-        long seconds = diff / 1000;
-        long minutes = seconds / 60;
-        Log.e(TAG, "Diff is m="+minutes);
+    }
 
-        if(minutes>30)
-            return true;
-        else
-            return false;
+
+    Boolean _isMessageOld(String timeSent) {
+
+        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss A");
+        Date MessageTime = null;
+        Log.e(TAG, String.valueOf(timeSent));
+        long diff, seconds, minutes = 60;  //set to 1 hour
+        try {
+            MessageTime = Home.dateFormat.parse(timeSent);
+            Date currTime = new Date();
+
+
+            Log.e(TAG, String.valueOf(MessageTime));
+
+
+            diff = currTime.getTime() - MessageTime.getTime();
+
+            seconds = diff / 1000;
+            minutes = seconds / 60;
+            Log.e(TAG, "Diff is m=" + minutes);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+            Log.e(TAG, "could not parse MessageTime");
+            Toast.makeText(con, "Som error occurred with!", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+
+
+        return minutes > 30;
     }
 
     void disableAckWidgets(){
         ackNoView.setEnabled(false);
         ackYesView.setEnabled(false);
         cardViewHelp.setVisibility(View.GONE);
+    }
+
+    public void acknoledgeSender(final long responseTime) {
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.msgAck,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Toast.makeText(getApplicationContext(), "Your response is send to the sender of the message!", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                HashMap<String, String> user = sharedPrefHandler.getUserDetails();
+                String username = user.get("name");
+                String password = user.get("pass");
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Username", username);
+                params.put("Password", password);
+                params.put("ResponseTime", String.valueOf(responseTime));
+                params.put("ackTime", Home.dateFormat.format(new Date()));
+                params.put("sender", sender);
+
+
+                return params;
+            }
+        };
+
+        requestQueue.add(stringRequest);
     }
 
     @Override

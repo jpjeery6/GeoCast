@@ -8,11 +8,6 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
-        android:id="@+id/home_action_downloadchat"
-        android:orderInCategory="100"
-        android:title="Download"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/home_action_logout"
         android:orderInCategory="100"
         android:title="Logout"

@@ -5,9 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -19,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -67,32 +66,25 @@ public class Sent extends AppCompatActivity
 
         sharedPrefHandler = new SharedPrefHandler(this);
         con = this;
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        navigationView = (NavigationView) findViewById(R.id.sent_nav_view);
+        navigationView = findViewById(R.id.sent_nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        navigationView.setCheckedItem(R.id.inbox_nav_inbox);
+        navigationView.setCheckedItem(R.id.sent_nav_sent);
+
 
 
         //getting navbar header items- image , name ,welcome
-       View inboxNavHeader = navigationView.getHeaderView(0);
-        LinearLayout navHeaderLayout = (LinearLayout) inboxNavHeader.findViewById(R.id.sent_nav_layout);
+        View sentNavHeader = navigationView.getHeaderView(0);
+        LinearLayout navHeaderLayout = sentNavHeader.findViewById(R.id.sent_nav_layout);
         //setting listner on nav header layout to go to MyProfile Activity
         navHeaderLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,7 +95,11 @@ public class Sent extends AppCompatActivity
             }
         });
 
-        recordsList = (ListView) findViewById(R.id.SentchatList);
+        //set username in navigation drawer
+        TextView navUsername = sentNavHeader.findViewById(R.id.sent_nav_username);
+        navUsername.setText(Home.username.toUpperCase());
+
+        recordsList = findViewById(R.id.SentchatList);
         con = this;
         act = this;
 
@@ -124,7 +120,7 @@ public class Sent extends AppCompatActivity
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.getAllSentMessage,
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.getAllSentMessage,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -180,12 +176,19 @@ public class Sent extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navigationView.setCheckedItem(R.id.sent_nav_sent);
     }
 
     @Override
@@ -203,38 +206,53 @@ public class Sent extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.sent_action_settings) {
+            Intent i = new Intent(con, jeeryweb.geocast.Activities.Settings.class);
+            con.startActivity(i);
+
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.inbox_nav_home) {
+        Log.e("Sent nav id =", " " + id);
+
+        if (id == R.id.sent_nav_home) {
 
             //go to home activity
             //NavUtils.navigateUpFromSameTask(this);
-
-            //Intent i = new Intent(con, Home.class);
-            //con.startActivity(i);
-            super.onBackPressed();
+            Intent i = new Intent(con, Home.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            con.startActivity(i);
+            //super.onBackPressed();
             finish();
 
 
-        } else if (id == R.id.inbox_nav_inbox) {
-                startActivity(new Intent(this, Inbox.class));
+        } else if (id == R.id.sent_nav_inbox) {
+            Intent i = new Intent(con, Inbox.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            i.putExtra("sender", "dummy");
+            i.putExtra("msg", "dummy");
+            con.startActivity(i);
+            finish();
 
-        } else if (id == R.id.inbox_nav_sent) {
+        } else if (id == R.id.sent_nav_sent) {
+            //in same activity
 
-        } else if (id == R.id.inbox_nav_tools) {
 
-        }else if (id == R.id.home_nav_share) {
+        } else if (id == R.id.sent_nav_reliabilties) {
+            //go to Reliabilties activity
+            Intent i = new Intent(con, Reliabilities.class);
+            con.startActivity(i);
+
+
+        } else if (id == R.id.sent_nav_share) {
 
             try {
                 Intent i = new Intent(Intent.ACTION_SEND);
@@ -248,11 +266,11 @@ public class Sent extends AppCompatActivity
                 Log.e(TAG, "Error occurred in share");
             }
 
-        } else if (id == R.id.home_nav_feedback) {
+        } else if (id == R.id.sent_nav_feedback) {
             startActivity(new Intent(this, Feedback.class));
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

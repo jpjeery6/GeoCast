@@ -180,10 +180,12 @@
         <activity
             android:name="jeeryweb.geocast.Activities.Settings"
             android:label="@string/title_activity_settings" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="jeeryweb.geocast.Activities.Home" />
         </activity>
+
+        <receiver
+            android:name="jeeryweb.geocast.Reciever.RecieverResetHelpingList"
+            android:enabled="true"
+            android:exported="true" />
 
         <meta-data
             android:name="android.support.VERSION"

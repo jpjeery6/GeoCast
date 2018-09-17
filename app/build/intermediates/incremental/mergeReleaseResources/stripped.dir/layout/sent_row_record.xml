@@ -20,7 +20,7 @@
             android:layout_marginRight="10dp"
             android:ellipsize="end"
             android:textSize="8sp"
-            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/sent_Message_txt"
             android:maxLines="1"
             android:layout_marginBottom="8dp"
             android:layout_width="wrap_content"

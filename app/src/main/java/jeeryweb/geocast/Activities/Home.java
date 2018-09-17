@@ -17,9 +17,7 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -66,10 +64,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jeeryweb.geocast.Constants.APIEndPoint;
 import jeeryweb.geocast.Dialogs.MessageInputDialog;
@@ -77,6 +78,7 @@ import jeeryweb.geocast.PushyServices.PushyToken;
 import jeeryweb.geocast.R;
 import jeeryweb.geocast.Services.LocationUpdaterService;
 import jeeryweb.geocast.Utility.FileHelper;
+import jeeryweb.geocast.Utility.HomeActivityUtil;
 import jeeryweb.geocast.Utility.Network;
 import jeeryweb.geocast.Utility.SharedPrefHandler;
 import me.pushy.sdk.Pushy;
@@ -96,6 +98,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 //Attributes**************************************************************************************************************
     public static String username, password;
     public static  Location locationObj = null;
+    public int radius;
+    int counter = 0;
 
     //Variables
     private final String TAG = getClass().getSimpleName();
@@ -103,7 +107,10 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     //to check if my activity is the current activity
     public boolean isInFront;
     //to check if the app is run for the first time
-    private boolean firstTime;
+    private boolean firstTime, byNotification;
+    private boolean firstZoom = false;
+    private int greenZoom = 0;
+    private jeeryweb.geocast.Activities.Settings geoCastSettings;
 
     //user defined class objects
     APIEndPoint apiEndPoint;
@@ -111,22 +118,32 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     Network network;
     PushyToken pushyTokenObj;
     FileHelper fileHelper;
+    HomeActivityUtil homeActivityUtil;    //contains live iser methhods
     //for volley
     private RequestQueue requestQueue;
 
     NavigationView navigationView;
     public static Context con;
     Activity activity;
+    TextView nearbyInfo;
 
     Marker mCurrLocationMarker;
     Circle mcurrentCircle;
-    List<Marker> nearbyMarkers;
+    static List<Marker> nearbyMarkers;
     List<LatLng> nearbyLatlang;
     List<String> nearbyUsername;
     String fcmToken,pushyToken;
     String msg, result;
 
-    //widgets
+    String helper = null, lattihelper = null, longihelper = null;
+    // for marker animation
+
+    HashMap<String, Boolean> markerAnimationhelper;
+    //simpledate ofrmat
+    static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
+
+
+    //widgetss
     View mapView;
     FloatingActionMenu sendMessageFab;
     com.github.clans.fab.FloatingActionButton emergencyMsgFab, customMsgFab;
@@ -134,48 +151,13 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
     //Objects
     private BroadcastReceiver receiver;
-
-
     // required for location purpose
     private int mode;
     private UiSettings mUiSettings;
     private GoogleMap mMap;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient mFusedLocationClient;
-    //it is like an attribute
-    LocationCallback locationCallback = new LocationCallback() {
-        @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null) {
-                //Log.e("location callback", "on result func called but locationResult is null");
-                //getLoc();
-            } else {
-                //Log.e("location callback", "on result func called ");
-                //homeLocationSuccessDoWork();
-                locationObj = locationResult.getLastLocation();
-                for (Location location : locationResult.getLocations()) {
-                    //Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
-                    locationObj = location;
-                    //update home UI repeatedly in the for loop.
-                    //homeLocationSuccessDoWork();
-                }
-            }
-        }
-        @Override
-        public void onLocationAvailability(LocationAvailability locationAvailability) {
-            if (locationAvailability.isLocationAvailable()) {
-                //returns true the onLocationResult may not always be called regularly, however the device location is known
-                //on result callback can happen
-                //Log.e("location callback", "location is available");
-                tryToGetLastLocation();
 
-            } else {
-                //on location result will not be called
-                //Log.e("location callback", "location not available");
-                tryToGetLastLocation();
-            }
-        }
-    };
 
 //Methods**************************************************************************************************************
     @Override
@@ -184,11 +166,25 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         Pushy.listen(this);
         setContentView(R.layout.activity_home);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         con = this;
         activity = this;
+        geoCastSettings = new jeeryweb.geocast.Activities.Settings();
+        radius = Integer.parseInt(geoCastSettings.getRadiusSetting(con));
+        Log.e("Home ", "Rd val = " + radius);
+        if (radius == 0) {
+            //Log.e("Rd value","entered here");
+            radius = 30;
+
+        }
+
+        Log.e("Home ", "Rd val = " + radius);
+        nearbyLatlang = new ArrayList<>();
+        nearbyMarkers = new ArrayList<>();
+        nearbyUsername = new ArrayList<>();
+        markerAnimationhelper = new HashMap<>();
 
         //setting up broadcast reciever for internet connection checking
         receiver = new BroadcastReceiver() {
@@ -218,29 +214,37 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
 
         //getting widgets
-        sendMessageFab = (FloatingActionMenu) findViewById(R.id.sendmsg_floating_menu);
-        emergencyMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.emergencymsgfab);
-        customMsgFab = (com.github.clans.fab.FloatingActionButton) findViewById(R.id.custommsgfab);
+        sendMessageFab = findViewById(R.id.sendmsg_floating_menu);
+        emergencyMsgFab = findViewById(R.id.emergencymsgfab);
+        customMsgFab = findViewById(R.id.custommsgfab);
+        nearbyInfo = findViewById(R.id.nearbyUersInfo);
 
 
         //navigation bar
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        navigationView = (NavigationView) findViewById(R.id.home_nav_view);
+        navigationView = findViewById(R.id.home_nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.home_nav_home);
 
         //getting navbar header items- image , name ,welcome
         View homeNavHeader = navigationView.getHeaderView(0);
-        LinearLayout navHeaderLayout = (LinearLayout) homeNavHeader.findViewById(R.id.home_nav_layout);
+        LinearLayout navHeaderLayout = homeNavHeader.findViewById(R.id.home_nav_layout);
 
 
         //setting up objects ................................................................................
         sharedPrefHandler = new SharedPrefHandler(this);
+        homeActivityUtil = new HomeActivityUtil(this);
 
+        //debugging
+
+//        sharedPrefHandler.saveHelpingUser("dev jeery");
+//        sharedPrefHandler.saveHelpingUser("Random");
+//        sharedPrefHandler.saveHelpingUser("kalpa");
+        //end debugging
 
         //logged in first time or not --required for pushy token sending........................................
         //we will get this intent from 1. login/register activity 2. Pushy reciever for shwing green marker in map
@@ -251,9 +255,23 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             firstTime = bundle.getBoolean("firstTime");
             //2
             if(i.hasExtra("helper")){
-               String helper = bundle.getString("helper");
+                helper = bundle.getString("helper");
                Log.e(TAG, "Helper::: "+helper);
                Toast.makeText(con, "Helper:::::: "+helper, Toast.LENGTH_SHORT).show();
+            }
+            if (i.hasExtra("lattihelper")) {
+                lattihelper = bundle.getString("lattihelper");
+                Log.e(TAG, "Helper::: " + lattihelper);
+                Toast.makeText(con, "Helper:::::: " + lattihelper, Toast.LENGTH_SHORT).show();
+            }
+            if (i.hasExtra("longihelper")) {
+                longihelper = bundle.getString("longihelper");
+                Log.e(TAG, "Helper::: " + longihelper);
+                Toast.makeText(con, "Helper:::::: " + longihelper, Toast.LENGTH_SHORT).show();
+            }
+
+            if (helper != null && lattihelper != null && longihelper != null) {
+                byNotification = true;
             }
         }
 
@@ -293,7 +311,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //getting widgets........................................................................................
         //set username in navigation drawer
-        TextView navUsername = (TextView) homeNavHeader.findViewById(R.id.home_nav_username);
+        TextView navUsername = homeNavHeader.findViewById(R.id.home_nav_username);
         navUsername.setText(username.toUpperCase());
 
 
@@ -324,11 +342,15 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                                 public void onResponse(String response) {
                                     dialog.dismiss();
                                     Toast.makeText(con, "Message Sent Successfully", Toast.LENGTH_LONG).show();
+
+
+                                    homeActivityUtil.resetHelpingUsersInfo();
                                 }
                             },
                             new Response.ErrorListener() {
                                 @Override
                                 public void onErrorResponse(VolleyError error) {
+                                    dialog.dismiss();
                                     Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
                                 }
                             }){
@@ -341,6 +363,10 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                             params.put("Latitude", Double.toString(locationObj.getLatitude()));
                             params.put("Longitude", Double.toString(locationObj.getLongitude()));
                             params.put("Message", msg);
+                            params.put("Timestamp", HomeActivityUtil.fixDateFormat(dateFormat.format(new Date())));
+                            params.put("Radius", geoCastSettings.getRadiusSetting(con));
+                            params.put("Reliable", geoCastSettings.getReliableSetting(con));
+
 
                             return params;
                         }
@@ -390,9 +416,14 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         mapView.post(new Runnable() {
             @Override
             public void run() {
+
+                //if(firstZoom == false)
+                updateLocFromHome();
                 getRealTimeLocations();
+
                 //homeLocationSuccessDoWork();
                 mapView.postDelayed(this,10000);
+                Log.e("Home", "one loop done");
             }
         });
 
@@ -452,12 +483,20 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             }
         });
 
-        getLoc();
+        if (byNotification) {
+            LatLng helperLoc = new LatLng(Double.parseDouble(lattihelper), Double.parseDouble(longihelper));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(helperLoc));
+
+        } else {
+            // Zoom out just a little
+            //   mMap.animateCamera(CameraUpdateFactory.zoomTo(mMap.getCameraPosition().zoom - 0.5f));
+        }
+        getLocSettings();
 
     }
 
 
-    private void getLoc() {
+    private void getLocSettings() {
         //try to get current location
         //check settings first
         try {
@@ -500,6 +539,43 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
     }
 
+
+    //it is like an attribute
+    LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) {
+                //Log.e("location callback", "on result func called but locationResult is null");
+                //getLoc();
+            } else {
+                //Log.e("location callback", "on result func called ");
+                //homeLocationSuccessDoWork();
+                locationObj = locationResult.getLastLocation();
+                for (Location location : locationResult.getLocations()) {
+                    //Log.e("location callback itr", "Location: " + location.getLatitude() + " " + location.getLongitude());
+                    locationObj = location;
+                    //update home UI repeatedly in the for loop.
+                    //homeLocationSuccessDoWork();
+                }
+            }
+        }
+
+        @Override
+        public void onLocationAvailability(LocationAvailability locationAvailability) {
+            if (locationAvailability.isLocationAvailable()) {
+                //returns true the onLocationResult may not always be called regularly, however the device location is known
+                //on result callback can happen
+                //Log.e("location callback", "location is available");
+                tryToGetLastLocation();
+
+            } else {
+                //on location result will not be called
+                //Log.e("location callback", "location not available");
+                tryToGetLastLocation();
+            }
+        }
+    };
+
     @SuppressLint("MissingPermission")
     private void tryToGetLastLocation() {
         mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -516,41 +592,62 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
         });
     }
 
+    private void updateLocFromHome() {
+        if (locationObj != null) {
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.updateLoc,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+
+                            Log.e("Response home locupdt", response);
+
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getApplicationContext(), "Can't cannot to Server", Toast.LENGTH_SHORT).show();
+                            Log.e("Volley Real time loc", " kk" + error.getMessage());
+                        }
+                    }) {
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("Username", username);
+                    params.put("Password", password);
+                    params.put("Latitude", Double.toString(locationObj.getLatitude()));
+                    params.put("Longitude", Double.toString(locationObj.getLongitude()));
+                    //params.put("Radius", String.valueOf(radius));
+
+                    return params;
+                }
+            };
+
+            requestQueue.add(stringRequest);
+
+        }
+    }
+
 
     private void getRealTimeLocations() {
-        //get real time locations
-        //do this on a new thread
-//        new Thread(new Runnable() {
-//            public void run() {
-//                // a potentially  time consuming task
-//                if (locationObj != null) {
-//                    network = new Network(apiEndPoint.nearbyusers, username, "jdb", "bnc", Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "ksdhfj", null, null, null, null);
-//                    result = network.DoWork();
-//                    if (result != null && result.contains("nearby")) {
-//                        //Log.e("getreal time locs", "recieved locations");
-//                        //pass this result to UI thread by writing a message to the UI's handler
-//                        Message m = Message.obtain();
-//                        Bundle bundle = new Bundle();
-//                        bundle.putString("resultRealTime", result);
-//                        m.setData(bundle);
-//                        handler.sendMessage(m);
-//                    }
-//                }
-//            }
-//        }).start();
-
-
         //do this thing using volley bcz handler may the one creating the lag
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, apiEndPoint.nearbyusers,
+
+        Log.e("Home", "n/w call");
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, APIEndPoint.nearbyusers,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
 
+                        Log.e("Response real time =", response);
+
                         String[] nearby = response.split("nearby");
                         //Log.e("no of nearby users", String.valueOf(nearby.length));
-                        nearbyLatlang = new ArrayList<>();
-                        nearbyMarkers = new ArrayList<>();
-                        nearbyUsername = new ArrayList<>();
+
+                        if (nearbyLatlang != null)
+                            nearbyLatlang.clear();
+                        if (nearbyUsername != null)
+                            nearbyUsername.clear();
+
                         for (int i = 1; i < nearby.length; i++)   //no of users nearby
                         {
                             //Log.e("nearby[]", String.valueOf(i) + " :" + nearby[i]);
@@ -565,6 +662,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                             nearbyLatlang.add(i - 1, latLng);
                             nearbyUsername.add(i - 1, nearUser);
                         }
+                        Log.e("Home Get Real Time Loc", "n/w call response");
+
 
                         homeLocationSuccessDoWork();
                     }
@@ -572,7 +671,8 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Can't cannot to Server", Toast.LENGTH_SHORT).show();
+                        Log.e("Volley Real time loc", " kk" + error.getMessage());
                     }
                 }){
             @Override
@@ -583,6 +683,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                 params.put("Password", password);
                 params.put("Latitude", Double.toString(locationObj.getLatitude()));
                 params.put("Longitude", Double.toString(locationObj.getLongitude()));
+                params.put("Radius", String.valueOf(radius));
 
                 return params;
             }
@@ -605,36 +706,56 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
         //set the marker in the map only if the map is already ready
         if (mMap != null && locationObj != null) {
-            if (mCurrLocationMarker != null)
+
+            Log.e("Home", "Delete everything from map");
+            if (mCurrLocationMarker != null) {
                 mCurrLocationMarker.remove();
-            if (mcurrentCircle != null)
+                Log.e("Home", "curr location removed  ");
+            }
+
+            if (mcurrentCircle != null) {
                 mcurrentCircle.remove();
+                Log.e("Home", "curr circle removed ");
+            }
+
             if (nearbyMarkers != null) {
                 removeNearbyUsersMarker();
-                //Log.e("homeLocationSuccess", "remove nearby users ");
+                Log.e("Home", "remove nearby users ");
             }
 
 
             //Place current location marker
             //Log.e("homeLocationSuccess", "set new marker ");
             LatLng latLng = new LatLng(locationObj.getLatitude(), locationObj.getLongitude());
+            if (!firstZoom && !byNotification) {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+                firstZoom = true;
+            }
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(latLng);
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-            mCurrLocationMarker = mMap.addMarker(markerOptions);
 
-            //radius in metres
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+
+            mCurrLocationMarker = mMap.addMarker(markerOptions);
+            if (radius == 0)
+                radius = 30;
+
+            Log.e("Home radius", " value =" + radius);
 
             mcurrentCircle = mMap.addCircle(new CircleOptions()
                     .center(latLng)
-                    .radius(10000)
+                    .radius(radius * 1000)  //radius in KM , parameter in meters
                     .strokeColor(getResources().getColor(R.color.primaryLightColor))
                     .strokeWidth(4)
                     .fillColor(0x22AAAAAA));
 
-
+            Log.e("Home", "red dot and circle added");
             //place markers at nearby locations
             if (nearbyLatlang != null) {
+                Set<String> helpersList = sharedPrefHandler.getHelpingUser();
+
+                Log.e("Home", "number of markesr deleted  " + nearbyMarkers.size());
+
                 //Log.e("nearbyLatlang=", String.valueOf(nearbyLatlang.size()));
                 for (int i = 0; i < nearbyLatlang.size(); i++)   //no of users nearby
                 {
@@ -643,43 +764,48 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                     markerOptions.position(nearbyLatlang.get(i));
                     markerOptions.snippet("Set as Reliable User?");
                     markerOptions.title(nearbyUsername.get(i));
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                    Log.e("HomeP", String.valueOf(helpersList));
+
+                    if (isHelpingUser(nearbyUsername.get(i), helpersList)) {
+                        Log.e("HomeP", "helping user");
+                        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                        if (!markerAnimationhelper.containsKey(nearbyUsername.get(i))) {
+                            Log.e("zoom", "in zoon");
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(nearbyLatlang.get(i), 16));
+                            markerAnimationhelper.put(nearbyUsername.get(i), true);
+                        }
+
+
+//                        if(helpersList.size() != greenZoom)
+                        //                          mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(nearbyLatlang.get(i), 15));
+//                        greenZoom++;
+                    } else
+                        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
                     nearbyMarkers.add(i, mMap.addMarker(markerOptions));
                 }
+                nearbyInfo.setText(nearbyLatlang.size() + " users nearby ");
+                //    mCurrLocationMarker = mMap.addMarker(markerOptions);   //to make it on the top
+                Log.e("Home", "No of markers added=  " + nearbyMarkers.size());
             }
             //move map camera
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 11));
+//            if(firstZoom ==false) {
+//                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+//                firstZoom = true;
+//            }
 
         }
-        /*
-        // Logic to handle location object
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
-        String format = simpleDateFormat.format(new Date());
-        //Log.v(TAG + "timestamp", format);Log.e(TAG + " lattitude", Double.toString(location.getLatitude()));Log.e(TAG + " longitude", Double.toString(location.getLongitude()));
-        msg = "dummy";
-        //update database with this location
-        //do this on a new thread
-        new Thread(new Runnable() {
-            public void run() {                                                     //THREAD 2............
-                // a potentially  time consuming task
-                network = new Network(updateLoc, username, password, msg, Double.toString(locationObj.getLatitude()), Double.toString(locationObj.getLongitude()), "kjdfjk", null, null, null, null);
-                result = network.DoWork();
-                if (result != null) {
-                    Log.e(TAG, "toast main thread" + result);
-                    if (result.contains("some keyword")) { //we are not sending this thats why some keyword
-                        //pass this result to UI thread by writing a message to the UI's handler
-                        Message m = Message.obtain();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("result", result);
-                        m.setData(bundle);
-                        handler.sendMessage(m);
-                    }
-                }
+    }
+
+
+    private void removeNearbyUsersMarker() {
+        if (nearbyMarkers != null) {
+            Log.e("No of markers removed= ", " " + nearbyMarkers.size());
+            for (int i = 0; i < nearbyMarkers.size(); i++) {
+                Log.e("removing nearby markers", "one after another");
+                nearbyMarkers.get(i).remove();
             }
-        }).start();
-        */
-        //start the services------------only if location is known
-        //location updater service
+            nearbyMarkers.clear();
+        }
     }
 
 
@@ -759,14 +885,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
     }
 
 
-    private void removeNearbyUsersMarker() {
-        if (nearbyMarkers != null) {
-            for (int i = 0; i < nearbyMarkers.size(); i++) {
-                Log.e("removing nearby markers", "one after another");
-                nearbyMarkers.get(i).remove();
-            }
-        }
-    }
+
 
     private void fadeView() {
         View view = findViewById(R.id.home_content_parent);
@@ -836,6 +955,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
     @Override
     public void onResume() {
+        radius = Integer.parseInt(geoCastSettings.getRadiusSetting(con));
         super.onResume();
         Log.e("on resume", "on resume");
         navigationView.setCheckedItem(R.id.home_nav_home);
@@ -852,7 +972,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else if (sendMessageFab.isOpened()) {
@@ -900,7 +1020,7 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
                             new Thread(new Runnable() {
                                 public void run() {                                                     //THREAD 3............
                                     // a potentially  time consuming task
-                                    network = new Network(apiEndPoint.lgot, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
+                                    network = new Network(APIEndPoint.lgot, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
                                     result = network.DoWork();
                                     if (result != null) {
                                         Log.e(TAG, "toast main thread" + result);
@@ -926,28 +1046,6 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             //logout done
 
             return true;
-        } else if (id == R.id.home_action_downloadchat) {
-            //download messages ........................................................................................
-            fileHelper = new FileHelper();
-            if (fileHelper.emptyFile(con)) {
-                new Thread(new Runnable() {
-                    public void run() {                                                     //THREAD 3............
-                        // a potentially  time consuming task
-                        network = new Network(apiEndPoint.pullMsg, username, password, "dummy", "00.00", "00.00", "dummy", null, null, null, null);
-                        result = network.DoWork();
-                        if (result != null) {
-                            Log.e(TAG, "toast main thread=" + result);
-                            //write the results in the file
-                            //.................
-                            fileHelper.writeFile(con, result);
-
-                        }
-
-                    }
-                }).start();
-                Toast.makeText(con, "All Messages downloaded", Toast.LENGTH_SHORT).show();
-            } else
-                Toast.makeText(con, "You already have messages", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.home_action_settings) {
             Intent i = new Intent(con, jeeryweb.geocast.Activities.Settings.class);
             con.startActivity(i);
@@ -1006,8 +1104,19 @@ public class Home extends AppCompatActivity implements NavigationView.OnNavigati
             startActivity(new Intent(this, Feedback.class));
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+
+    //***************************
+    private Boolean isHelpingUser(String s, Set<String> h) {
+
+        for (String temp : h) {
+            if (s.equalsIgnoreCase(temp))
+                return true;
+        }
+        return false;
     }
 }

@@ -72,7 +72,7 @@ public class PushyToken {
                     public void run() {                                                 //THREAD 1.................
                         // a potentially  time consuming task
                         Log.e("new thread", "starting upload of Pushy token to app server");
-                        network = new Network(apiEndPoint.updatePushy, Home.username, Home.password, "dummy", "00.00", "00.00", pushyToken, null, null, null, null);
+                        network = new Network(APIEndPoint.updatePushy, Home.username, Home.password, "dummy", "00.00", "00.00", pushyToken, null, null, null, null);
                         result = network.DoWork();
                         if (result != null) {
                             Log.e(TAG, " Pushy " + result);

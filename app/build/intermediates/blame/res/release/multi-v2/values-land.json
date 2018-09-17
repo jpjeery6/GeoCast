@@ -4,24 +4,7 @@
             "outputFile": "/home/jeery/StudioProjects/GeoCast/app/build/intermediates/incremental/mergeReleaseResources/merged.dir/values-land/values-land.xml",
             "map": [
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/play-services-cast-framework-11.8.0.aar/3c93c2ff9ebd2aeae1ddba1d81fffc56/res/values-land/values.xml",
-                    "from": {
-                        "startLines": "4,5,6,7,8,9",
-                        "startColumns": "0,0,0,0,0,0",
-                        "startOffsets": "183,264,344,414,483,578",
-                        "endColumns": "80,79,69,68,94,90",
-                        "endOffsets": "263,343,413,482,577,668"
-                    },
-                    "to": {
-                        "startLines": "6,7,8,9,10,11",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "328,413,497,571,644,743",
-                        "endColumns": "84,83,73,72,98,94",
-                        "endOffsets": "408,492,566,639,738,833"
-                    }
-                },
-                {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/mediarouter-v7-25.2.0.aar/a54bdcff999eed5bef1900689f3e6546/res/values-land/values-land.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/mediarouter-v7-25.2.0.aar/a2b4a01b03e2ad0a0444c572f5eeaeba/res/values-land/values-land.xml",
                     "from": {
                         "startLines": "2,3,4",
                         "startColumns": "4,4,4",
@@ -38,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/ffd88eb28851ff4f227fbd52892f8799/res/values-land/values-land.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/2ac3f04fd8df8c6358306efd652abeb4/res/values-land/values-land.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",
@@ -48,7 +31,7 @@
                     }
                 },
                 {
-                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/design-26.1.0.aar/af370a439b404a9e20b3cef1d4e38f39/res/values-land/values-land.xml",
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/design-26.1.0.aar/b30fa014a26cbda1a9a71e443cac252e/res/values-land/values-land.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -64,6 +47,23 @@
                         "endLines": "18",
                         "endColumns": "12",
                         "endOffsets": "1243"
+                    }
+                },
+                {
+                    "source": "/home/jeery/.gradle/caches/transforms-1/files-1.1/play-services-cast-framework-11.8.0.aar/cb0e59915c07269632f4de3883a26c20/res/values-land/values.xml",
+                    "from": {
+                        "startLines": "4,5,6,7,8,9",
+                        "startColumns": "0,0,0,0,0,0",
+                        "startOffsets": "183,264,344,414,483,578",
+                        "endColumns": "80,79,69,68,94,90",
+                        "endOffsets": "263,343,413,482,577,668"
+                    },
+                    "to": {
+                        "startLines": "6,7,8,9,10,11",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "328,413,497,571,644,743",
+                        "endColumns": "84,83,73,72,98,94",
+                        "endOffsets": "408,492,566,639,738,833"
                     }
                 }
             ]

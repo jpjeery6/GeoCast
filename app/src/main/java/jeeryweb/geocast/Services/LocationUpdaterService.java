@@ -59,7 +59,7 @@ public class LocationUpdaterService extends Service {
             new Thread(new Runnable() {
                 public void run() {
                     // a potentially  time consuming task
-                    network =new Network(apiEndPoint.updateLoc,user,pass,msg,latt,longi,"jdnksj",null,null,null,null);
+                    network = new Network(APIEndPoint.updateLoc, user, pass, msg, latt, longi, "jdnksj", null, null, null, null);
                     result=network.DoWork();
                     if(result!=null)
                     {
@@ -84,6 +84,7 @@ public class LocationUpdaterService extends Service {
                         // Builds the notification and issues it.
                         mNotifyMgr.notify(mNotificationId, mBuilder.build());
                         */
+                        Log.e("Location updater srvc", "working and location requset network");
                     }
                 }
             }).start();

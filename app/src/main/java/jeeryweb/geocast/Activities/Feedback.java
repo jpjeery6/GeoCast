@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -48,9 +47,9 @@ public class Feedback extends AppCompatActivity {
         setContentView(R.layout.activity_feedback);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        editTextFeedback = (EditText) findViewById(R.id.addr_edittext);
-        editTextMail = (EditText) findViewById(R.id.addr_editmail);
-        butt = (Button) findViewById(R.id.addr_buttSend);
+        editTextFeedback = findViewById(R.id.addr_edittext);
+        editTextMail = findViewById(R.id.addr_editmail);
+        butt = findViewById(R.id.addr_buttSend);
         con  = this;
         sharedPrefHandler = new SharedPrefHandler(this);
         requestQueue = Volley.newRequestQueue(this);
@@ -138,9 +137,7 @@ public class Feedback extends AppCompatActivity {
     }
 
     Boolean validateInput(){
-        if(editTextMail.getText().toString().length()==0 || editTextFeedback.getText().toString().length()==0)
-            return false;
-        return true;
+        return editTextMail.getText().toString().length() != 0 && editTextFeedback.getText().toString().length() != 0;
     }
 
     @Override

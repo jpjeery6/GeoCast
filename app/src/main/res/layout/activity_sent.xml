@@ -20,7 +20,7 @@
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_sent"
-        app:menu="@menu/activity_inbox_drawer" />
+        app:menu="@menu/activity_sent_drawer" />
 
 </android.support.v4.widget.DrawerLayout>
 </layout>

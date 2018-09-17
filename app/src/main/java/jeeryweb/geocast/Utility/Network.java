@@ -57,7 +57,7 @@ public class Network {
     public String DoWork()
     {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss a");
-        String format = simpleDateFormat.format(new Date());
+        String format = HomeActivityUtil.fixDateFormat(simpleDateFormat.format(new Date()));
         String result=null;
 
         try {
